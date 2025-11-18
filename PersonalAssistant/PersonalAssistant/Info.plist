@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+    <string>Personal Assistant</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <true/>
+    </dict>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- Privacy Permissions -->
+    <key>NSCalendarsUsageDescription</key>
+    <string>Takvim etkinliklerinizi görmek ve hatırlatmalar oluşturmak için takvim erişimi gerekiyor.</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>Hatırlatmalarınızı yönetmek için hatırlatmalara erişim gerekiyor.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Konum tabanlı hatırlatmalar için konumunuza erişmemiz gerekiyor.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Konum tabanlı hatırlatmaların arka planda da çalışması için sürekli konum erişimi gerekiyor.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Konum tabanlı hatırlatmaların arka planda da çalışması için konum erişimi gerekiyor.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Ses notları kaydetmek için mikrofon erişimi gerekiyor.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Notlara fotoğraf eklemek için fotoğraf kütüphanesi erişimi gerekiyor.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Doküman tarama ve fotoğraf çekme için kamera erişimi gerekiyor.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Uygulamayı güvenli bir şekilde kilitlemek için Face ID kullanılıyor.</string>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>Kişiselleştirilmiş deneyim için izniniz gerekiyor.</string>
+
+    <!-- Background Modes -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+        <string>remote-notification</string>
+        <string>location</string>
+    </array>
+
+    <!-- Siri and Shortcuts -->
+    <key>NSSiriUsageDescription</key>
+    <string>Siri ile notlar ve görevler oluşturabilirsiniz.</string>
+
+    <!-- App Groups -->
+    <key>AppGroups</key>
+    <array>
+        <string>group.com.personalassistant.app</string>
+    </array>
+</dict>
+</plist>
