@@ -1,6 +1,8 @@
-# SORT Test Otomasyon Sistemi
+# SORT Test Otomasyon Sistemi & CAN Bus Güvenlik Test Platformu
 
 Windows ortamında çalışan, elektrikli ve içten yanmalı araçların UITP SORT standardına uygun enerji tüketimi testlerini otomatik olarak gerçekleştiren Python tabanlı test otomasyon yazılımı.
+
+**YENİ:** CAN Bus Siber Güvenlik Test Sistemi - Kvaser Memorator 2xHS ile otomotiv güvenlik testleri için profesyonel araç.
 
 ## Özellikler
 
@@ -11,6 +13,57 @@ Windows ortamında çalışan, elektrikli ve içten yanmalı araçların UITP SO
 - **Veri Kayıt**: CSV formatında saniye-saniye test verileri
 - **Raporlama**: Excel formatında detaylı test raporları
 - **Güvenlik**: Acil durdurma, hız limiti kontrolü, bağlantı izleme
+
+---
+
+## 🔒 CAN Bus Siber Güvenlik Test Sistemi
+
+**⚠️ UYARI: Bu yazılım SADECE yetkili güvenlik testleri, araştırma ve eğitim amaçlı kullanılmalıdır.**
+
+### Özellikler
+
+- **8 Farklı Saldırı Türü**: Fuzzing, DoS, Spoofing, Replay, Diagnostic, Error Frame, Bus Off, ID Scan
+- **Kvaser Desteği**: Memorator 2xHS ve diğer Kvaser cihazlar
+- **Esnek Konfigürasyon**: Baud rate, ID aralığı, paket hızı ayarlanabilir
+- **Gerçek Zamanlı Monitor**: CAN bus mesajlarını canlı izleme
+- **Mesaj Yakalama**: Replay attack için mesaj yakalama ve kaydetme
+- **Detaylı Loglama**: Tüm işlemler log'lanır
+- **GUI Arayüzü**: Kullanıcı dostu PyQt6 arayüzü
+
+### Hızlı Başlangıç (Güvenlik Testi)
+
+```bash
+# GUI ile başlat
+python can_security_gui.py
+
+# Örnek scriptleri çalıştır
+python examples/can_security_example.py
+```
+
+### Saldırı Türleri
+
+1. **Fuzzing** - Rastgele CAN mesajları ile güvenlik açığı tespiti
+2. **DoS** - Bus flooding saldırıları
+3. **Spoofing** - Sahte mesaj enjeksiyonu
+4. **Replay** - Yakalanan mesajların tekrarı
+5. **Diagnostic** - UDS komut enjeksiyonu
+6. **Error Frame** - Hata frame saldırıları
+7. **Bus Off** - ECU'ları devre dışı bırakma
+8. **ID Scan** - Aktif CAN ID'leri keşfi
+
+### Dokümantasyon
+
+Detaylı kullanım kılavuzu için: **[CAN_SECURITY_GUIDE.md](CAN_SECURITY_GUIDE.md)**
+
+### Dosyalar
+
+- `can_security_attacks.py` - Saldırı modülleri
+- `can_security_gui.py` - GUI arayüzü
+- `can_security_config.json` - Konfigürasyon ve presetler
+- `examples/can_security_example.py` - Örnek kullanım scriptleri
+- `CAN_SECURITY_GUIDE.md` - Detaylı dokümantasyon
+
+---
 
 ## Sistem Mimarisi
 

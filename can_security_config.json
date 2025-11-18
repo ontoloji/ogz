@@ -1,0 +1,110 @@
+{
+  "can": {
+    "channel": 0,
+    "bitrate": 500000,
+    "comment": "Kvaser Memorator 2xHS kanal ve baud rate ayarları"
+  },
+
+  "attack_presets": {
+    "fuzzing_light": {
+      "attack_type": "fuzzing",
+      "packet_rate": 50,
+      "duration": 10,
+      "id_range_start": "0x100",
+      "id_range_end": "0x200",
+      "data_length": 8,
+      "description": "Hafif fuzzing - Düşük hızda rastgele mesajlar"
+    },
+
+    "fuzzing_aggressive": {
+      "attack_type": "fuzzing",
+      "packet_rate": 1000,
+      "duration": 60,
+      "id_range_start": "0x000",
+      "id_range_end": "0x7FF",
+      "data_length": 8,
+      "description": "Agresif fuzzing - Yüksek hızda tam ID aralığı"
+    },
+
+    "dos_moderate": {
+      "attack_type": "dos",
+      "target_id": "0x000",
+      "packet_rate": 5000,
+      "duration": 30,
+      "data_length": 8,
+      "description": "Orta seviye DoS - Bus flooding"
+    },
+
+    "spoofing_speed": {
+      "attack_type": "spoofing",
+      "target_id": "0x302",
+      "packet_rate": 50,
+      "duration": 20,
+      "data_length": 8,
+      "description": "Hız verisini manipüle etme"
+    },
+
+    "diagnostic_scan": {
+      "attack_type": "diagnostic",
+      "target_id": "0x7DF",
+      "packet_rate": 10,
+      "duration": 30,
+      "description": "UDS servislerini tarama"
+    },
+
+    "id_scan_full": {
+      "attack_type": "id_scan",
+      "id_range_start": "0x000",
+      "id_range_end": "0x7FF",
+      "packet_rate": 100,
+      "duration": 100,
+      "description": "Tam CAN ID taraması"
+    }
+  },
+
+  "target_systems": {
+    "vbox": {
+      "speed_id": "0x302",
+      "description": "VBOX GPS hız mesajı"
+    },
+
+    "obd2": {
+      "request_id": "0x7DF",
+      "response_id_range": "0x7E8-0x7EF",
+      "description": "OBD-II diagnostic"
+    },
+
+    "body_control": {
+      "id_range": "0x200-0x2FF",
+      "description": "Body control module mesajları"
+    },
+
+    "powertrain": {
+      "id_range": "0x300-0x3FF",
+      "description": "Motor ve şanzıman kontrol"
+    }
+  },
+
+  "safety": {
+    "max_packet_rate": 10000,
+    "max_duration": 3600,
+    "require_confirmation": true,
+    "log_all_attacks": true,
+    "auto_stop_on_error": true
+  },
+
+  "logging": {
+    "log_directory": "logs",
+    "log_level": "DEBUG",
+    "log_format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "rotate_logs": true,
+    "max_log_size_mb": 100
+  },
+
+  "monitor": {
+    "max_messages_display": 1000,
+    "auto_scroll": true,
+    "capture_filters": [],
+    "export_format": "csv"
+  }
+}
