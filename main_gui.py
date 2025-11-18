@@ -812,8 +812,12 @@ class MainWindow(QMainWindow):
 
     def on_report_clicked(self):
         """Raporlama ekranı aç"""
-        # TODO: Raporlama penceresi
-        QMessageBox.information(self, "Bilgi", "Raporlama ekranı yakında eklenecek")
+        try:
+            from report_gui import ReportWindow
+            self.report_window = ReportWindow()
+            self.report_window.show()
+        except Exception as e:
+            QMessageBox.critical(self, "Hata", f"Raporlama ekranı açılamadı: {e}")
 
     def closeEvent(self, event):
         """Pencere kapanıyor"""
