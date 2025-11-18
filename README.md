@@ -131,6 +131,88 @@ python main_gui.py
 python report_gui.py
 ```
 
+### Kvaser CAN Mesaj Logger Başlatma
+```bash
+python kvaser_message_logger.py
+```
+
+## Kvaser CAN Mesaj Logger Kullanımı
+
+Kvaser Memorator 2xHS cihazından CAN mesajlarını loglayan bağımsız bir araçtır.
+
+### Özellikler
+- **DBC Dosyası Desteği**: DBC dosyası yükleyip mesajları seçebilme
+- **Manuel Mesaj Girişi**: DBC olmadan mesaj ID ve byte bilgisi girişi (30 mesaja kadar)
+- **Esnek Loglama**: İstediğiniz sıklıkla (1ms - 10s arası) CSV loglama
+- **Otomatik Tarihleme**: Log dosyalarına otomatik tarih-saat damgası ekleme
+- **Çoklu Mesaj**: Birden fazla mesajı aynı anda loglama
+- **Gerçek Zamanlı İzleme**: Gelen mesajları anlık görüntüleme
+
+### Kullanım Adımları
+
+#### 1. CAN Cihazı Bağlantısı
+1. Kanal numarasını seçin (genelde 0)
+2. Bitrate'i seçin (varsayılan: 500 kbit/s)
+3. "Bağlan" butonuna tıklayın
+
+#### 2. Mesaj Ekleme - DBC ile
+1. "Gözat..." butonuna tıklayarak DBC dosyası seçin
+2. "DBC Yükle" butonuna tıklayın
+3. Açılan listeden mesaj seçin
+4. "DBC Mesajı Ekle" butonuna tıklayın
+5. Tabloda mesajın "Aktif" kutucuğunu işaretleyin
+
+#### 3. Mesaj Ekleme - Manuel
+1. Mesaj ID'yi hex (0x123) veya decimal (291) formatında girin
+2. Mesaj adı girin (opsiyonel)
+3. "Manuel Mesaj Ekle" butonuna tıklayın
+4. Tabloda mesajın "Aktif" kutucuğunu işaretleyin
+5. Maksimum 30 manuel mesaj ekleyebilirsiniz
+
+#### 4. Loglama Ayarları
+1. Log dosyası ismi girin (örn: "test_log")
+2. İsterseniz "Klasör Seç" ile kayıt klasörünü değiştirin
+3. Loglama sıklığını ayarlayın:
+   - 0.001 saniye = 1000 Hz
+   - 0.01 saniye = 100 Hz
+   - 0.1 saniye = 10 Hz (varsayılan)
+   - 1.0 saniye = 1 Hz
+
+#### 5. Loglama Başlatma
+1. En az bir mesajın "Aktif" olduğundan emin olun
+2. "Loglamayı Başlat" butonuna tıklayın
+3. Log dosyası otomatik olarak şu formatta oluşturulur:
+   ```
+   test_log_20241118_143025.csv
+   (isim_YYYYMMDD_HHMMSS.csv)
+   ```
+
+#### 6. Loglama Durdurma
+1. "Loglamayı Durdur" butonuna tıklayın
+2. Dosya otomatik olarak kaydedilip kapatılır
+
+### CSV Dosya Formatı
+
+#### DBC Mesajları için
+```csv
+Timestamp,Time_ms,Message_Name,Message_ID,Signal1,Signal2,...
+2024-11-18 14:30:25.123,1234567,EngineSpeed,0x123,1500,85,...
+```
+
+#### Manuel Mesajlar için
+```csv
+Timestamp,Time_ms,Message_Name,Message_ID,Byte0,Byte1,Byte2,...
+2024-11-18 14:30:25.123,1234567,MSG_0x456,0x456,0x12,0x34,0x56,...
+```
+
+### İpuçları
+
+- **DBC Mesajları**: Sinyal isimleri ve değerleri otomatik parse edilir
+- **Manuel Mesajlar**: Ham byte değerleri hex formatında loglanır
+- **Gerçek Zamanlı İzleme**: Tabloda "Son Veri" sütununda gelen mesajları görebilirsiniz
+- **Mesaj Yönetimi**: İstemediğiniz mesajları "Aktif" kutucuğunu kaldırarak devre dışı bırakabilirsiniz
+- **Çoklu Test**: Farklı mesaj setleri için tablodaki mesajları temizleyip yeni mesajlar ekleyebilirsiniz
+
 ## Test Prosedürü
 
 ### 1. Hazırlık
@@ -213,24 +295,25 @@ python report_gui.py
 
 ```
 project/
-├── main_gui.py              # Ana test arayüzü
-├── report_gui.py            # Raporlama arayüzü
-├── can_interface.py         # CAN iletişimi
-├── arduino_interface.py     # Arduino kontrolü
-├── edaq_interface.py        # eDAQ entegrasyonu
-├── pid_controller.py        # PID kontrolcü
-├── sort_profiles.py         # Test profilleri
-├── data_logger.py           # Veri kaydı
-├── utils.py                 # Yardımcı fonksiyonlar
-├── config.json              # Yapılandırma
-├── requirements.txt         # Python bağımlılıkları
-├── README.md                # Bu dosya
+├── main_gui.py                  # Ana test arayüzü
+├── report_gui.py                # Raporlama arayüzü
+├── kvaser_message_logger.py     # CAN mesaj logger (bağımsız araç)
+├── can_interface.py             # CAN iletişimi
+├── arduino_interface.py         # Arduino kontrolü
+├── edaq_interface.py            # eDAQ entegrasyonu
+├── pid_controller.py            # PID kontrolcü
+├── sort_profiles.py             # Test profilleri
+├── data_logger.py               # Veri kaydı
+├── utils.py                     # Yardımcı fonksiyonlar
+├── config.json                  # Yapılandırma
+├── requirements.txt             # Python bağımlılıkları
+├── README.md                    # Bu dosya
 ├── arduino_firmware/
-│   └── pedal_controller.ino # Arduino firmware
-├── data/                    # Test verileri (CSV)
+│   └── pedal_controller.ino     # Arduino firmware
+├── data/                        # Test verileri (CSV)
 │   ├── SORT1_GIDIS_*.csv
 │   └── SORT1_GIDIS_*.meta.json
-└── logs/                    # Log dosyaları
+└── logs/                        # Log dosyaları
     └── sort_test_*.log
 ```
 

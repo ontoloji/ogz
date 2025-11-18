@@ -8,6 +8,7 @@ pyqtgraph>=0.13.0
 # CAN İletişimi (Kvaser - Windows only)
 # canlib - Kvaser CANlib SDK ile birlikte gelir, ayrı kurulum gerekir
 # https://www.kvaser.com/downloads-kvaser/
+cantools>=39.0.0  # DBC dosyası okuma ve CAN mesaj parsing
 
 # Serial İletişim (Arduino)
 pyserial>=3.5
