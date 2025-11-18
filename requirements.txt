@@ -1,0 +1,27 @@
+# SORT Test Otomasyon Sistemi - Python Bağımlılıkları
+# Windows ortamı için gereksinimler
+
+# GUI
+PyQt6>=6.5.0
+pyqtgraph>=0.13.0
+
+# CAN İletişimi (Kvaser - Windows only)
+# canlib - Kvaser CANlib SDK ile birlikte gelir, ayrı kurulum gerekir
+# https://www.kvaser.com/downloads-kvaser/
+
+# Serial İletişim (Arduino)
+pyserial>=3.5
+
+# HTTP İstekleri (eDAQ)
+requests>=2.31.0
+
+# Veri İşleme
+pandas>=2.0.0
+numpy>=1.24.0
+openpyxl>=3.1.0  # Excel export için
+
+# Loglama ve Yardımcı
+python-dateutil>=2.8.2
+
+# Grafik (opsiyonel - test için)
+matplotlib>=3.7.0  # PID test grafiği için
