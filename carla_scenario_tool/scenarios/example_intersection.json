@@ -1,0 +1,89 @@
+{
+  "name": "Kavşak Geçiş Testi",
+  "description": "Sağdan gelen araç ile kavşak senaryosu",
+  "carla_map": "Town03",
+  "ego_vehicle": {
+    "blueprint": "vehicle.tesla.model3",
+    "spawn_point": {
+      "location": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 90.0,
+        "z": 0.0
+      }
+    },
+    "initial_speed": 0.0,
+    "target_speed": 30.0,
+    "route_waypoints": [
+      {
+        "location": {
+          "x": 0.0,
+          "y": 50.0,
+          "z": 0.5
+        },
+        "speed": 30.0,
+        "wait_time": 0.0
+      }
+    ],
+    "enable_autopilot": false,
+    "enable_sensors": true
+  },
+  "npc_actors": [
+    {
+      "actor_id": "npc_vehicle_right",
+      "actor_type": "vehicle",
+      "blueprint": "vehicle.bmw.grandtourer",
+      "spawn_point": {
+        "location": {
+          "x": 30.0,
+          "y": 25.0,
+          "z": 0.5
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 180.0,
+          "z": 0.0
+        }
+      },
+      "route_waypoints": [
+        {
+          "location": {
+            "x": -20.0,
+            "y": 25.0,
+            "z": 0.5
+          },
+          "speed": 40.0,
+          "wait_time": 0.0
+        }
+      ],
+      "behavior": "normal",
+      "auto_destroy": true
+    }
+  ],
+  "weather": {
+    "preset": "cloudy_noon",
+    "cloudiness": 0.0,
+    "precipitation": 0.0,
+    "precipitation_deposits": 0.0,
+    "wind_intensity": 0.0,
+    "sun_azimuth_angle": 0.0,
+    "sun_altitude_angle": 75.0,
+    "fog_density": 0.0,
+    "fog_distance": 0.0,
+    "fog_falloff": 0.0,
+    "wetness": 0.0
+  },
+  "time": {
+    "hour": 14,
+    "minute": 30
+  },
+  "duration": 90.0,
+  "_metadata": {
+    "created_at": "2025-11-18T11:41:56.488098",
+    "version": "1.0"
+  }
+}

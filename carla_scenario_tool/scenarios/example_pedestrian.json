@@ -1,0 +1,119 @@
+{
+  "name": "Yaya Geçidi Testi",
+  "description": "Karşıdan karşıya geçen yayalar ile test senaryosu",
+  "carla_map": "Town02",
+  "ego_vehicle": {
+    "blueprint": "vehicle.audi.tt",
+    "spawn_point": {
+      "location": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "initial_speed": 0.0,
+    "target_speed": 40.0,
+    "route_waypoints": [
+      {
+        "location": {
+          "x": 100.0,
+          "y": 0.0,
+          "z": 0.5
+        },
+        "speed": 40.0,
+        "wait_time": 0.0
+      }
+    ],
+    "enable_autopilot": false,
+    "enable_sensors": true
+  },
+  "npc_actors": [
+    {
+      "actor_id": "pedestrian_01",
+      "actor_type": "pedestrian",
+      "blueprint": "walker.pedestrian.0001",
+      "spawn_point": {
+        "location": {
+          "x": 50.0,
+          "y": -5.0,
+          "z": 0.5
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 90.0,
+          "z": 0.0
+        }
+      },
+      "route_waypoints": [
+        {
+          "location": {
+            "x": 50.0,
+            "y": 5.0,
+            "z": 0.5
+          },
+          "speed": 5.0,
+          "wait_time": 0.0
+        }
+      ],
+      "behavior": "normal",
+      "auto_destroy": true
+    },
+    {
+      "actor_id": "pedestrian_02",
+      "actor_type": "pedestrian",
+      "blueprint": "walker.pedestrian.0002",
+      "spawn_point": {
+        "location": {
+          "x": 50.0,
+          "y": -6.0,
+          "z": 0.5
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 90.0,
+          "z": 0.0
+        }
+      },
+      "route_waypoints": [
+        {
+          "location": {
+            "x": 50.0,
+            "y": 6.0,
+            "z": 0.5
+          },
+          "speed": 4.5,
+          "wait_time": 2.0
+        }
+      ],
+      "behavior": "cautious",
+      "auto_destroy": true
+    }
+  ],
+  "weather": {
+    "preset": "clear_noon",
+    "cloudiness": 0.0,
+    "precipitation": 0.0,
+    "precipitation_deposits": 0.0,
+    "wind_intensity": 0.0,
+    "sun_azimuth_angle": 0.0,
+    "sun_altitude_angle": 75.0,
+    "fog_density": 0.0,
+    "fog_distance": 0.0,
+    "fog_falloff": 0.0,
+    "wetness": 0.0
+  },
+  "time": {
+    "hour": 10,
+    "minute": 0
+  },
+  "duration": 60.0,
+  "_metadata": {
+    "created_at": "2025-11-18T11:41:56.488712",
+    "version": "1.0"
+  }
+}

@@ -1,0 +1,15 @@
+# CARLA Scenario Generator Requirements
+# Python 3.7+ uyumlu
+# Ubuntu 22.04 için
+
+# CARLA Python API
+# Not: CARLA PythonAPI manuel olarak PYTHONPATH'e eklenmeli
+# CARLA kurulumundan sonra:
+# export PYTHONPATH=$PYTHONPATH:/path/to/CARLA/PythonAPI/carla
+# export PYTHONPATH=$PYTHONPATH:/path/to/CARLA/PythonAPI/carla/dist/carla-*-py3.7-linux-x86_64.egg
+
+# Dataclasses (Python 3.6 için gerekli, 3.7+ built-in)
+dataclasses; python_version < '3.7'
+
+# GUI için tkinter (genelde Python ile birlikte gelir)
+# Ubuntu'da eksikse: sudo apt-get install python3-tk
