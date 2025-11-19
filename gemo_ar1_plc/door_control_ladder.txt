@@ -1,0 +1,320 @@
+================================================================================
+GEMO AR1 - KAPAK AÇMA/KAPAMA TEST CİHAZI
+Ladder Logic Program (Text-Based)
+================================================================================
+
+I/O TANIMI:
+-----------
+Inputs:
+  F1  : Start Tuşu
+  F2  : Stop Tuşu
+  F3  : Reset Tuşu (Sayaç Sıfırlama)
+  I3  : Sıkışma/Safety Sensörü
+
+Outputs:
+  DQ1 : Motor Tetikleme Çıkışı
+
+Internal Markers:
+  M0  : Sistem Çalışıyor
+  M1  : Faz 1 Aktif (Açma Fazı)
+  M2  : Faz 2 Aktif (Kapama Fazı)
+  M3  : Pulse Tetikleme
+  M4  : Pulse Çıkış Kontrolü
+  M5  : Safety Tetikleme
+
+Timers:
+  T0  : Pulse Timer (300ms)
+  T1  : Faz 1 Timer (10 saniye)
+  T2  : Faz 2 Timer (10 saniye)
+
+Counters:
+  C0  : Açma Sayacı
+
+================================================================================
+
+NETWORK 1: SİSTEM START/STOP MANTIK
+----------------------------------------
+Açıklama: F1 ile sistem başlar, F2 ile durur, M0 kendini tutar
+
+     F1        M0        F2        M0
+|----[ ]-------[/]-------( )------|
+                         |
+     M0        F2        |
+|----[ ]-------[/]-------+
+
+Pseudo Code:
+IF F1 AND NOT M0 THEN M0 := TRUE
+IF M0 AND NOT F2 THEN M0 := TRUE
+IF F2 THEN M0 := FALSE
+
+================================================================================
+
+NETWORK 2: FAZ 1 BAŞLATMA (AÇMA FAZI)
+----------------------------------------
+Açıklama: Sistem başlarken veya Faz 2 bittikten sonra Faz 1 başlar
+
+     M0        M1        M2        T2        M1
+|----[ ]-------[/]-------[/]-------[ ]-------( )------|
+                                            |
+     M5        M0                            |
+|----[ ]-------[ ]----------------------------+
+
+Pseudo Code:
+IF M0 AND NOT M1 AND NOT M2 AND T2 THEN M1 := TRUE
+IF M5 AND M0 THEN M1 := TRUE  (Safety sonrası Faz 1'e dön)
+
+================================================================================
+
+NETWORK 3: FAZ 1 PULSE TETİKLEME
+----------------------------------------
+Açıklama: Faz 1 başladığında pulse tetikle
+
+     M1        M4        M3
+|----[P]-------[/]-------( )------|
+
+P = Positive Edge (Yükselen Kenar)
+
+Pseudo Code:
+IF M1 (RISING EDGE) AND NOT M4 THEN M3 := TRUE
+
+================================================================================
+
+NETWORK 4: FAZ 1 TIMER (10 SANİYE)
+----------------------------------------
+Açıklama: Faz 1 süresi 10 saniye
+
+     M1
+|----[ ]------------------(T1)-----|
+
+Pseudo Code:
+IF M1 THEN START T1 (10 seconds)
+
+================================================================================
+
+NETWORK 5: FAZ 1 BİTİŞ - FAZ 2 BAŞLATMA
+----------------------------------------
+Açıklama: T1 bittiğinde Faz 1 kapan, Faz 2 başlat
+
+     T1        M1
+|----[ ]-------(/)----|
+
+     T1        M2        M2
+|----[ ]-------[/]-------( )------|
+
+Pseudo Code:
+IF T1 THEN M1 := FALSE
+IF T1 AND NOT M2 THEN M2 := TRUE
+
+================================================================================
+
+NETWORK 6: FAZ 2 PULSE TETİKLEME
+----------------------------------------
+Açıklama: Faz 2 başladığında pulse tetikle
+
+     M2        M4        M3
+|----[P]-------[/]-------( )------|
+
+Pseudo Code:
+IF M2 (RISING EDGE) AND NOT M4 THEN M3 := TRUE
+
+================================================================================
+
+NETWORK 7: FAZ 2 TIMER (10 SANİYE)
+----------------------------------------
+Açıklama: Faz 2 süresi 10 saniye
+
+     M2
+|----[ ]------------------(T2)-----|
+
+Pseudo Code:
+IF M2 THEN START T2 (10 seconds)
+
+================================================================================
+
+NETWORK 8: FAZ 2 BİTİŞ - DÖNGÜ RESTART
+----------------------------------------
+Açıklama: T2 bittiğinde Faz 2 kapan, döngü başa döner
+
+     T2        M2
+|----[ ]-------(/)----|
+
+Pseudo Code:
+IF T2 THEN M2 := FALSE
+(M1 Network 2'de otomatik aktif olacak)
+
+================================================================================
+
+NETWORK 9: SAFETY SENSÖRÜ KONTROLÜ (FAZ 2)
+----------------------------------------
+Açıklama: Faz 2 sırasında I3 aktifse sistemi durdur ve geri aç
+
+     M2        I3        M5
+|----[ ]-------[ ]-------( )------|
+
+     M5        M2
+|----[ ]-------(/)----|
+
+     M5        T2
+|----[ ]-------(RST)--|
+
+Pseudo Code:
+IF M2 AND I3 THEN M5 := TRUE
+IF M5 THEN M2 := FALSE
+IF M5 THEN RESET T2
+
+================================================================================
+
+NETWORK 10: SAFETY PULSE TETİKLEME
+----------------------------------------
+Açıklama: Safety aktifse hemen pulse gönder (kapıyı geri aç)
+
+     M5        M4        M3
+|----[P]-------[/]-------( )------|
+
+Pseudo Code:
+IF M5 (RISING EDGE) AND NOT M4 THEN M3 := TRUE
+
+================================================================================
+
+NETWORK 11: SAFETY RESET
+----------------------------------------
+Açıklama: Safety tetikleme bitince M5 sıfırla
+
+     M5        M1        M5
+|----[ ]-------[ ]-------(/)----|
+
+Pseudo Code:
+IF M5 AND M1 THEN M5 := FALSE
+
+================================================================================
+
+NETWORK 12: PULSE ÜRETİCİ (0.3 SANİYE)
+----------------------------------------
+Açıklama: M3 tetiklendiğinde 300ms pulse üret
+
+     M3        M4
+|----[ ]-------( )------|
+
+     M4
+|----[ ]------------------(T0)-----|
+
+     T0        M4
+|----[ ]-------(/)----|
+
+     T0        M3
+|----[ ]-------(/)----|
+
+Pseudo Code:
+IF M3 THEN M4 := TRUE
+IF M4 THEN START T0 (300ms)
+IF T0 THEN M4 := FALSE
+IF T0 THEN M3 := FALSE
+
+================================================================================
+
+NETWORK 13: DQ1 ÇIKIŞ KONTROLÜ
+----------------------------------------
+Açıklama: M4 aktifken DQ1 çıkışı aktif
+
+     M4        DQ1
+|----[ ]-------( )------|
+
+Pseudo Code:
+IF M4 THEN DQ1 := TRUE ELSE DQ1 := FALSE
+
+================================================================================
+
+NETWORK 14: AÇMA SAYACI
+----------------------------------------
+Açıklama: Her pulse tetiklemesinde sayacı artır (M3 yükselen kenar)
+
+     M3        M1
+|----[P]-------[ ]--------(CTU)--|
+                           C0
+
+CTU = Count Up
+
+Pseudo Code:
+IF M3 (RISING EDGE) AND M1 THEN C0 := C0 + 1
+
+Not: M1 kontrolü sadece açma fazındaki pulseları sayar
+
+================================================================================
+
+NETWORK 15: SAYAÇ RESET
+----------------------------------------
+Açıklama: F3 ile sayacı sıfırla
+
+     F3
+|----[ ]-------(RST)--|
+               C0
+
+Pseudo Code:
+IF F3 THEN RESET C0
+
+================================================================================
+
+NETWORK 16: SİSTEM RESET (STOP)
+----------------------------------------
+Açıklama: F2 ile tüm fazları ve timerları sıfırla
+
+     F2        M1
+|----[ ]-------(/)----|
+
+     F2        M2
+|----[ ]-------(/)----|
+
+     F2        M5
+|----[ ]-------(/)----|
+
+     F2
+|----[ ]-------(RST)--|
+               T1
+
+     F2
+|----[ ]-------(RST)--|
+               T2
+
+Pseudo Code:
+IF F2 THEN
+    M1 := FALSE
+    M2 := FALSE
+    M5 := FALSE
+    RESET T1
+    RESET T2
+END_IF
+
+================================================================================
+PROGRAM SONU
+================================================================================
+
+ÇALIŞMA PRENSİBİ ÖZET:
+-----------------------
+
+1. F1 Basılır → M0 = 1 (Sistem başlar)
+
+2. M0 = 1 → M1 = 1 (Faz 1 başlar)
+   - M1 yükselen kenar → M3 = 1 → M4 = 1 → DQ1 = 1 (0.3sn pulse)
+   - T1 başlar (10 saniye)
+   - C0 sayacı +1
+
+3. T1 biter → M1 = 0, M2 = 1 (Faz 2 başlar)
+   - M2 yükselen kenar → M3 = 1 → M4 = 1 → DQ1 = 1 (0.3sn pulse)
+   - T2 başlar (10 saniye)
+
+4. T2 biter → M2 = 0 (Faz 2 biter)
+   - Döngü başa döner (Network 2 → M1 = 1)
+
+5. SAFETY: Faz 2 sırasında I3 = 1 ise
+   - M5 = 1 (Safety aktif)
+   - M2 = 0 (Faz 2 iptal)
+   - T2 sıfırla
+   - M5 → M3 = 1 → DQ1 pulse (Kapıyı geri aç)
+   - M1 = 1 (Faz 1'e dön)
+   - M5 = 0 (Safety sıfırla)
+
+6. F2 Basılır → Sistem durur, tüm marker ve timerlar sıfırlanır
+
+7. F3 Basılır → C0 sayacı sıfırlanır
+
+================================================================================
