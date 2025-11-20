@@ -1,0 +1,21 @@
+# Meeting Translator - Gereksinimler
+
+# Ses işleme
+sounddevice>=0.4.6
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Speech-to-Text (Whisper)
+openai-whisper>=20231117
+torch>=2.0.0
+torchaudio>=2.0.0
+
+# Çeviri
+deep-translator>=1.11.4
+
+# GUI (genellikle Python ile gelir ama eksikse)
+# tkinter - Python ile birlikte gelir
+
+# Yardımcı
+setuptools>=65.0.0
+wheel>=0.38.0
