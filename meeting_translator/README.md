@@ -15,16 +15,70 @@ Teams ve benzeri online toplantılarda konuşulanları gerçek zamanlı olarak �
 
 ### Sistem Gereksinimleri
 - **İşletim Sistemi**: Windows 10/11
-- **Python**: 3.8 veya üzeri
 - **RAM**: En az 4GB (8GB önerilir)
-- **İşlemci**: Intel i5 veya AMD Ryzen 5 ve üzeri
+- **İşlemce**: Intel i5 veya AMD Ryzen 5 ve üzeri
+- **Python**: 3.8+ (sadece kaynak koddan çalıştırıyorsanız)
 
-### Python Kütüphaneleri
-Tüm gerekli kütüphaneler `requirements.txt` dosyasında listelenmiştir.
+## Hızlı Başlangıç
 
-## Kurulum
+### 🚀 Seçenek 1: EXE Dosyası ile (ÖNERİLEN - Python Gerekmez!)
 
-### 1. Python Kurulumu
+**En kolay yol - Python yüklemeden kullanın:**
+
+1. **MeetingTranslator.exe** dosyasını indirin (veya build edin)
+2. **Çift tıklayın ve çalıştırın**
+3. İlk çalıştırmada Whisper modeli otomatik indirilecek (birkaç dakika)
+4. Hazır! 🎉
+
+**Not:** Windows Defender "Bilinmeyen uygulama" uyarısı verebilir - "Yine de çalıştır" seçin.
+
+### 📦 Seçenek 2: Python ile Kaynak Koddan
+
+Python yüklü ve kaynak kodu çalıştırmak istiyorsanız:
+
+```bash
+install.bat    # İlk kurulum
+run.bat        # Uygulamayı çalıştır
+```
+
+## Kurulum Detayları
+
+### 💻 EXE Dosyası Oluşturma (Geliştiriciler İçin)
+
+Kendi bilgisayarınızda .exe dosyası oluşturmak için:
+
+#### 1. Gereksinimleri Kurun
+```bash
+install.bat                      # Standart kurulum
+pip install -r requirements_dev.txt  # PyInstaller'ı ekle
+```
+
+#### 2. EXE Oluşturun
+
+**Tek dosya versiyon (önerilir - taşınabilir):**
+```bash
+build_exe.bat
+```
+Çıktı: `dist\MeetingTranslator.exe` (tek dosya, ~500MB)
+
+**Dizin versiyon (daha hızlı başlar):**
+```bash
+build_exe_onedir.bat
+```
+Çıktı: `dist\MeetingTranslator\` klasörü
+
+#### 3. Build Süresi
+- İlk build: 5-10 dakika
+- Sonraki build'ler: 2-3 dakika
+
+#### 4. EXE Dosyasını Paylaşma
+- Oluşan .exe dosyasını kopyalayıp başka bilgisayarlarda çalıştırabilirsiniz
+- Python yüklemesi gerekmez
+- İlk çalıştırmada Whisper modeli indirilir
+
+### 🐍 Python ile Kurulum (Kaynak Kod)
+
+#### 1. Python Kurulumu
 Eğer Python yüklü değilse, [python.org](https://www.python.org/downloads/) adresinden Python 3.8+ sürümünü indirin ve kurun.
 
 **Önemli**: Kurulum sırasında "Add Python to PATH" seçeneğini işaretleyin.
@@ -191,6 +245,17 @@ C: `config.py` dosyasından `SOURCE_LANG` ve `TARGET_LANG` değerlerini değişt
 
 **S: Başka toplantı uygulamalarında çalışır mı?**
 C: Evet! Teams, Zoom, Google Meet, Discord veya ses çıkışı olan herhangi bir uygulamada çalışır.
+
+**S: EXE dosyası neden bu kadar büyük (~500MB)?**
+C: PyTorch ve Whisper modeli dahil edildiği için boyutu büyüktür. Alternatif olarak dizin versiyonunu kullanabilirsiniz.
+
+**S: Windows Defender uyarı veriyor, güvenli mi?**
+C: Evet, tamamen güvenlidir. PyInstaller ile oluşturulan yeni .exe dosyaları bazen "bilinmeyen yayıncı" uyarısı alabilir. Kaynak kodları inceleyebilirsiniz.
+
+**S: Python versiyonu mu EXE versiyonu mu daha iyi?**
+C:
+- **EXE**: Daha kolay, Python gerekmez, taşınabilir
+- **Python**: Daha esnek, özelleştirilebilir, daha küçük boyut
 
 ## İletişim
 

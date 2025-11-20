@@ -1,0 +1,8 @@
+# Meeting Translator - Geliştirme Gereksinimleri
+# EXE oluşturmak için bu dosyayı kullanın
+
+# Ana gereksinimler
+-r requirements.txt
+
+# EXE Builder
+pyinstaller>=5.13.0

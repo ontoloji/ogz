@@ -16,6 +16,9 @@ deep-translator>=1.11.4
 # GUI (genellikle Python ile gelir ama eksikse)
 # tkinter - Python ile birlikte gelir
 
+# EXE oluşturma (opsiyonel - sadece geliştirme için)
+# pyinstaller>=5.13.0
+
 # Yardımcı
 setuptools>=65.0.0
 wheel>=0.38.0

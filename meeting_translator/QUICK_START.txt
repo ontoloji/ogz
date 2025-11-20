@@ -1,0 +1,79 @@
+╔═══════════════════════════════════════════════════════════════╗
+║          MEETING TRANSLATOR - HIZLI BAŞLANGIÇ                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🎯 NE YAPAR?
+Teams, Zoom gibi toplantılarda İngilizce konuşmaları gerçek zamanlı
+olarak Türkçeye çevirir ve ekranda altyazı olarak gösterir.
+
+═══════════════════════════════════════════════════════════════
+
+📦 KURULUM (İlk Seferinde)
+
+Seçenek 1: EXE DOSYASI (ÖNERİLEN - Python Gerekmez)
+   ► MeetingTranslator.exe dosyasını çalıştırın
+   ► İlk açılışta model indirilecek (150MB, 2-3 dakika)
+   ► Hazır!
+
+Seçenek 2: PYTHON İLE (Geliştiriciler için)
+   ► install.bat dosyasını çalıştırın
+   ► Kurulum bitince run.bat ile başlatın
+
+═══════════════════════════════════════════════════════════════
+
+⚙️ ÖNEMLİ: WINDOWS SES AYARI (Tek Sefer)
+
+Uygulamanın sistem sesini dinleyebilmesi için:
+
+1. Sağ alt köşedeki hoparlör simgesine SAĞ TIKLAYIN
+2. "Ses ayarları" → "Ses Denetim Masası"
+3. "Kayıt" sekmesi → Boş yere sağ tıklayın
+4. "Devre dışı cihazları göster"
+5. "Stereo Mix"i bulun → Sağ tıklayın → "Etkinleştir"
+6. "Stereo Mix"e tekrar sağ tıklayın → "Varsayılan Cihaz"
+
+═══════════════════════════════════════════════════════════════
+
+🚀 KULLANIM
+
+1. Uygulamayı çalıştırın (MeetingTranslator.exe veya run.bat)
+2. Ekranda şeffaf altyazı penceresi açılacak
+3. Toplantınızı başlatın (Teams/Zoom/Meet)
+4. Konuşmalar otomatik olarak çevrilecek!
+
+Pencere Kontrolleri:
+   • Sürükle: Başlık çubuğunu tutun
+   • Gizle: "−" butonuna basın
+   • Kapat: "✕" butonuna basın veya Ctrl+C
+
+═══════════════════════════════════════════════════════════════
+
+🔧 EXE OLUŞTURMA (Geliştiriciler)
+
+1. install.bat
+2. pip install -r requirements_dev.txt
+3. build_exe.bat          (tek dosya - taşınabilir)
+   veya
+   build_exe_onedir.bat   (dizin - daha hızlı)
+
+Çıktı: dist\ klasöründe
+
+═══════════════════════════════════════════════════════════════
+
+❓ SORUN GİDERME
+
+Ses algılanmıyor?
+   → Stereo Mix'in aktif ve varsayılan olduğunu kontrol edin
+   → Toplantı sesinin çaldığından emin olun
+
+Çeviri yavaş?
+   → config.py → WHISPER_MODEL = "tiny" yapın
+
+Windows Defender uyarı veriyor?
+   → Güvenli, "Yine de çalıştır" seçin
+
+═══════════════════════════════════════════════════════════════
+
+📚 Detaylı bilgi için: README.md
+
+Keyifli toplantılar! 🎉
