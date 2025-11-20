@@ -1,0 +1,22 @@
+{
+    "openai": {
+        "enabled": false,
+        "api_key": "BURAYA_OPENAI_API_KEY_GIRIN",
+        "model": "gpt-4"
+    },
+    "anthropic": {
+        "enabled": false,
+        "api_key": "BURAYA_ANTHROPIC_API_KEY_GIRIN",
+        "model": "claude-3-5-sonnet-20241022"
+    },
+    "google": {
+        "enabled": false,
+        "api_key": "BURAYA_GOOGLE_API_KEY_GIRIN",
+        "model": "gemini-pro"
+    },
+    "cohere": {
+        "enabled": false,
+        "api_key": "BURAYA_COHERE_API_KEY_GIRIN",
+        "model": "command"
+    }
+}

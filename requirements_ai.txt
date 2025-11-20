@@ -1,0 +1,15 @@
+# Multi-AI Question Tool - Python Bağımlılıkları
+# Windows ortamı için gereksinimler
+
+# GUI (mevcut projeden)
+PyQt6>=6.5.0
+
+# AI Provider API'leri
+openai>=1.3.0              # OpenAI GPT-4/GPT-3.5
+anthropic>=0.7.0           # Anthropic Claude
+google-generativeai>=0.3.0 # Google Gemini
+cohere>=4.37               # Cohere (opsiyonel)
+
+# Yardımcı kütüphaneler
+requests>=2.31.0
+python-dateutil>=2.8.2
