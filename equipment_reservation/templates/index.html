@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-home"></i> Hoş Geldiniz, {{ current_user.full_name or current_user.username }}!</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-toolbox"></i> Toplam Ekipman</h5>
+                <h2 class="display-4">{{ stats.total_equipment }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-check-circle"></i> Müsait Ekipman</h5>
+                <h2 class="display-4">{{ stats.available_equipment }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-calendar-check"></i> Aktif Rezervasyonlarım</h5>
+                <h2 class="display-4">{{ stats.my_active_reservations }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-list"></i> Ekipman Listesi</h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% if equipment_list %}
+                <div class="list-group">
+                    {% for eq in equipment_list[:10] %}
+                    <a href="{{ url_for('equipment_detail', id=eq.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ eq.name }}</h6>
+                            <span class="badge bg-{{ 'success' if eq.status == 'available' else 'warning' if eq.status == 'maintenance' else 'danger' }}">
+                                {{ eq.status }}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ eq.equipment_type }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('equipment_list') }}" class="btn btn-sm btn-outline-primary">
+                        Tümünü Gör <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Henüz ekipman bulunmamaktadır.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-history"></i> Son Rezervasyonlarım</h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% if recent_reservations %}
+                <div class="list-group">
+                    {% for res in recent_reservations %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ res.equipment.name }}</h6>
+                            <span class="badge bg-{{ 'success' if res.status == 'confirmed' else 'secondary' if res.status == 'cancelled' else 'primary' }}">
+                                {{ res.status }}
+                            </span>
+                        </div>
+                        <p class="mb-1"><small>{{ res.start_time.strftime('%d/%m/%Y %H:%M') }} - {{ res.end_time.strftime('%d/%m/%Y %H:%M') }}</small></p>
+                        <small class="text-muted">{{ res.purpose or 'Amaç belirtilmemiş' }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('reservation_list') }}" class="btn btn-sm btn-outline-info">
+                        Tümünü Gör <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Henüz rezervasyonunuz bulunmamaktadır.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Hızlı İşlemler</h5>
+                <a href="{{ url_for('equipment_list') }}" class="btn btn-primary m-2">
+                    <i class="fas fa-search"></i> Ekipman Ara
+                </a>
+                <a href="{{ url_for('calendar') }}" class="btn btn-info m-2">
+                    <i class="fas fa-calendar"></i> Takvimi Görüntüle
+                </a>
+                {% if current_user.is_manager() %}
+                <a href="{{ url_for('add_equipment') }}" class="btn btn-success m-2">
+                    <i class="fas fa-plus"></i> Yeni Ekipman Ekle
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Rezervasyon Yap - {{ equipment.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2><i class="fas fa-calendar-plus"></i> Rezervasyon Yap</h2>
+        <hr>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>{{ equipment.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Tip:</strong> {{ equipment.equipment_type }}</p>
+                <p><strong>Lokasyon:</strong> {{ equipment.location or 'Belirtilmemiş' }}</p>
+                <hr>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="start_time" class="form-label">Başlangıç Tarihi ve Saati</label>
+                        <input type="datetime-local" class="form-control" id="start_time" name="start_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_time" class="form-label">Bitiş Tarihi ve Saati</label>
+                        <input type="datetime-local" class="form-control" id="end_time" name="end_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="purpose" class="form-label">Kullanım Amacı</label>
+                        <textarea class="form-control" id="purpose" name="purpose" rows="3" required></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Rezervasyon Oluştur
+                        </button>
+                        <a href="{{ url_for('equipment_detail', id=equipment.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> İptal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set minimum date to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('start_time').min = now.toISOString().slice(0, 16);
+    document.getElementById('end_time').min = now.toISOString().slice(0, 16);
+
+    // Update end_time min when start_time changes
+    document.getElementById('start_time').addEventListener('change', function() {
+        document.getElementById('end_time').min = this.value;
+    });
+</script>
+{% endblock %}

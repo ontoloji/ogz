@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}{{ equipment.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-toolbox"></i> {{ equipment.name }}</h2>
+            <div>
+                {% if current_user.is_manager() %}
+                <a href="{{ url_for('edit_equipment', id=equipment.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Düzenle
+                </a>
+                <a href="{{ url_for('add_maintenance', equipment_id=equipment.id) }}" class="btn btn-info">
+                    <i class="fas fa-wrench"></i> Bakım Ekle
+                </a>
+                {% endif %}
+                {% if equipment.is_available() %}
+                <a href="{{ url_for('reserve_equipment', equipment_id=equipment.id) }}" class="btn btn-success">
+                    <i class="fas fa-calendar-plus"></i> Rezervasyon Yap
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-info-circle"></i> Ekipman Bilgileri</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Ekipman Tipi:</th>
+                        <td>{{ equipment.equipment_type }}</td>
+                    </tr>
+                    <tr>
+                        <th>Model:</th>
+                        <td>{{ equipment.model or 'Belirtilmemiş' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Seri No:</th>
+                        <td>{{ equipment.serial_number or 'Belirtilmemiş' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Durum:</th>
+                        <td>
+                            <span class="badge bg-{{ 'success' if equipment.status == 'available' else 'warning' if equipment.status == 'maintenance' else 'danger' }}">
+                                {% if equipment.status == 'available' %}Müsait
+                                {% elif equipment.status == 'maintenance' %}Bakımda
+                                {% elif equipment.status == 'faulty' %}Arızalı
+                                {% else %}{{ equipment.status }}
+                                {% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Lokasyon:</th>
+                        <td>{{ equipment.location or 'Belirtilmemiş' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Son Kalibrasyon:</th>
+                        <td>{{ equipment.last_calibration_date.strftime('%d/%m/%Y') if equipment.last_calibration_date else 'Belirtilmemiş' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Sonraki Kalibrasyon:</th>
+                        <td>
+                            {{ equipment.next_calibration_date.strftime('%d/%m/%Y') if equipment.next_calibration_date else 'Belirtilmemiş' }}
+                            {% if equipment.needs_calibration() %}
+                            <span class="badge bg-danger ms-1">
+                                <i class="fas fa-exclamation-triangle"></i> GEREKLİ
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                {% if equipment.description %}
+                <hr>
+                <h6>Açıklama:</h6>
+                <p>{{ equipment.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-calendar-alt"></i> Yaklaşan Rezervasyonlar</h5>
+            </div>
+            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                {% if reservations %}
+                <div class="list-group">
+                    {% for res in reservations %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ res.user.full_name or res.user.username }}</h6>
+                            <span class="badge bg-{{ 'success' if res.status == 'confirmed' else 'secondary' }}">
+                                {{ res.status }}
+                            </span>
+                        </div>
+                        <p class="mb-1"><small>{{ res.start_time.strftime('%d/%m/%Y %H:%M') }} - {{ res.end_time.strftime('%d/%m/%Y %H:%M') }}</small></p>
+                        <small class="text-muted">{{ res.purpose or 'Amaç belirtilmemiş' }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Yaklaşan rezervasyon bulunmamaktadır.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5><i class="fas fa-wrench"></i> Bakım Geçmişi</h5>
+            </div>
+            <div class="card-body">
+                {% if maintenance_history %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Bakım Tipi</th>
+                                <th>Açıklama</th>
+                                <th>Yapan</th>
+                                <th>Maliyet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for maint in maintenance_history %}
+                            <tr>
+                                <td>{{ maint.performed_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if maint.maintenance_type == 'calibration' else 'warning' if maint.maintenance_type == 'routine_check' else 'danger' }}">
+                                        {{ maint.maintenance_type }}
+                                    </span>
+                                </td>
+                                <td>{{ maint.description }}</td>
+                                <td>{{ maint.performed_by }}</td>
+                                <td>{{ '%.2f TL' % maint.cost if maint.cost else '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Bakım geçmişi bulunmamaktadır.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

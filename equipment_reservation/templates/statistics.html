@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}İstatistikler{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar"></i> İstatistikler ve Raporlar</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6 class="card-title">Toplam Ekipman</h6>
+                <h2 class="display-4">{{ total_equipment }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6 class="card-title">Toplam Rezervasyon</h6>
+                <h2 class="display-4">{{ total_reservations }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h6 class="card-title">Aktif Rezervasyonlar</h6>
+                <h2 class="display-4">{{ active_reservations }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6 class="card-title">Toplam Bakım Maliyeti</h6>
+                <h2 class="display-4">{{ '%.0f' % total_maintenance_cost }}</h2>
+                <small>TL</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-chart-pie"></i> Ekipman Durumları</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-trophy"></i> En Çok Kullanılan Ekipmanlar</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="usageChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if calibration_warnings %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Kalibrasyon Uyarıları</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Ekipman</th>
+                                <th>Tip</th>
+                                <th>Son Kalibrasyon</th>
+                                <th>Sonraki Kalibrasyon</th>
+                                <th>Kalan Gün</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for eq in calibration_warnings %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('equipment_detail', id=eq.id) }}">{{ eq.name }}</a>
+                                </td>
+                                <td>{{ eq.equipment_type }}</td>
+                                <td>{{ eq.last_calibration_date.strftime('%d/%m/%Y') if eq.last_calibration_date else '-' }}</td>
+                                <td>{{ eq.next_calibration_date.strftime('%d/%m/%Y') if eq.next_calibration_date else '-' }}</td>
+                                <td>
+                                    {% set days_left = (eq.next_calibration_date - now().date()).days if eq.next_calibration_date else 0 %}
+                                    <span class="badge bg-{{ 'danger' if days_left <= 0 else 'warning' }}">
+                                        {{ days_left }} gün
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Status Chart
+    const statusData = {
+        labels: [
+            {% for status, count in equipment_by_status %}
+            '{{ status }}',
+            {% endfor %}
+        ],
+        datasets: [{
+            data: [
+                {% for status, count in equipment_by_status %}
+                {{ count }},
+                {% endfor %}
+            ],
+            backgroundColor: [
+                '#28a745',  // available - green
+                '#ffc107',  // maintenance - yellow
+                '#dc3545',  // faulty - red
+                '#6c757d'   // other - gray
+            ]
+        }]
+    };
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: statusData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Usage Chart
+    const usageData = {
+        labels: [
+            {% for name, count in equipment_usage %}
+            '{{ name[:20] }}',
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Rezervasyon Sayısı',
+            data: [
+                {% for name, count in equipment_usage %}
+                {{ count }},
+                {% endfor %}
+            ],
+            backgroundColor: '#3788d8'
+        }]
+    };
+
+    new Chart(document.getElementById('usageChart'), {
+        type: 'bar',
+        data: usageData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

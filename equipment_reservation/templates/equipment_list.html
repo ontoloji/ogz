@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Ekipman Listesi{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-list"></i> Ekipman Listesi</h2>
+            {% if current_user.is_manager() %}
+            <a href="{{ url_for('add_equipment') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Yeni Ekipman Ekle
+            </a>
+            {% endif %}
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="type" class="form-label">Ekipman Tipi</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="">Tümü</option>
+                            {% for type in equipment_types %}
+                            <option value="{{ type }}" {% if request.args.get('type') == type %}selected{% endif %}>
+                                {{ type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">Durum</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">Tümü</option>
+                            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Müsait</option>
+                            <option value="in_use" {% if request.args.get('status') == 'in_use' %}selected{% endif %}>Kullanımda</option>
+                            <option value="maintenance" {% if request.args.get('status') == 'maintenance' %}selected{% endif %}>Bakımda</option>
+                            <option value="faulty" {% if request.args.get('status') == 'faulty' %}selected{% endif %}>Arızalı</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-filter"></i> Filtrele
+                        </button>
+                        <a href="{{ url_for('equipment_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> Temizle
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if equipment %}
+        {% for eq in equipment %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ eq.name }}</h5>
+                    <p class="card-text">
+                        <strong>Tip:</strong> {{ eq.equipment_type }}<br>
+                        <strong>Model:</strong> {{ eq.model or 'Belirtilmemiş' }}<br>
+                        <strong>Seri No:</strong> {{ eq.serial_number or 'Belirtilmemiş' }}<br>
+                        <strong>Lokasyon:</strong> {{ eq.location or 'Belirtilmemiş' }}
+                    </p>
+                    <span class="badge bg-{{ 'success' if eq.status == 'available' else 'warning' if eq.status == 'maintenance' else 'danger' if eq.status == 'faulty' else 'secondary' }}">
+                        {% if eq.status == 'available' %}Müsait
+                        {% elif eq.status == 'maintenance' %}Bakımda
+                        {% elif eq.status == 'faulty' %}Arızalı
+                        {% else %}{{ eq.status }}
+                        {% endif %}
+                    </span>
+                    {% if eq.needs_calibration() %}
+                    <span class="badge bg-danger ms-1">
+                        <i class="fas fa-exclamation-triangle"></i> Kalibrasyon Gerekli
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('equipment_detail', id=eq.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i> Detaylar
+                    </a>
+                    {% if eq.is_available() %}
+                    <a href="{{ url_for('reserve_equipment', equipment_id=eq.id) }}" class="btn btn-sm btn-success">
+                        <i class="fas fa-calendar-plus"></i> Rezervasyon Yap
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> Hiç ekipman bulunamadı.
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

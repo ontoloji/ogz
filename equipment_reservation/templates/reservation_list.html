@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Rezervasyonlarım{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-calendar-check"></i> {% if current_user.is_manager() %}Tüm Rezervasyonlar{% else %}Rezervasyonlarım{% endif %}</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('reservation_list', status='all') }}"
+               class="btn btn-{{ 'primary' if status_filter == 'all' else 'outline-primary' }}">
+                Tümü
+            </a>
+            <a href="{{ url_for('reservation_list', status='pending') }}"
+               class="btn btn-{{ 'warning' if status_filter == 'pending' else 'outline-warning' }}">
+                Beklemede
+            </a>
+            <a href="{{ url_for('reservation_list', status='confirmed') }}"
+               class="btn btn-{{ 'success' if status_filter == 'confirmed' else 'outline-success' }}">
+                Onaylandı
+            </a>
+            <a href="{{ url_for('reservation_list', status='cancelled') }}"
+               class="btn btn-{{ 'secondary' if status_filter == 'cancelled' else 'outline-secondary' }}">
+                İptal Edildi
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if reservations %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Ekipman</th>
+                        {% if current_user.is_manager() %}
+                        <th>Kullanıcı</th>
+                        {% endif %}
+                        <th>Başlangıç</th>
+                        <th>Bitiş</th>
+                        <th>Amaç</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in reservations %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('equipment_detail', id=res.equipment.id) }}">
+                                {{ res.equipment.name }}
+                            </a>
+                        </td>
+                        {% if current_user.is_manager() %}
+                        <td>{{ res.user.full_name or res.user.username }}</td>
+                        {% endif %}
+                        <td>{{ res.start_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ res.end_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ res.purpose[:50] + '...' if res.purpose and res.purpose|length > 50 else res.purpose or '-' }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if res.status == 'confirmed' else 'warning' if res.status == 'pending' else 'secondary' }}">
+                                {{ res.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if res.is_active() and (res.user_id == current_user.id or current_user.is_manager()) %}
+                            <form method="POST" action="{{ url_for('cancel_reservation', id=res.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bu rezervasyonu iptal etmek istediğinizden emin misiniz?')">
+                                    <i class="fas fa-times"></i> İptal
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> Henüz rezervasyon bulunmamaktadır.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

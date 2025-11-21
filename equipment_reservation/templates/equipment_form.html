@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{% if equipment %}Ekipman Düzenle{% else %}Yeni Ekipman{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2><i class="fas fa-{{ 'edit' if equipment else 'plus' }}"></i> {% if equipment %}Ekipman Düzenle{% else %}Yeni Ekipman Ekle{% endif %}</h2>
+        <hr>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Ekipman Adı</label>
+                        <input type="text" class="form-control" id="name" name="name"
+                               value="{{ equipment.name if equipment else '' }}" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="equipment_type" class="form-label">Ekipman Tipi</label>
+                            <input type="text" class="form-control" id="equipment_type" name="equipment_type"
+                                   value="{{ equipment.equipment_type if equipment else '' }}"
+                                   list="equipment_types">
+                            <datalist id="equipment_types">
+                                <option value="CAN Interface">
+                                <option value="Oscilloscope">
+                                <option value="Power Supply">
+                                <option value="Multimeter">
+                                <option value="Signal Generator">
+                                <option value="Logic Analyzer">
+                            </datalist>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="model" class="form-label">Model</label>
+                            <input type="text" class="form-control" id="model" name="model"
+                                   value="{{ equipment.model if equipment else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="serial_number" class="form-label">Seri Numarası</label>
+                            <input type="text" class="form-control" id="serial_number" name="serial_number"
+                                   value="{{ equipment.serial_number if equipment else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label">Lokasyon</label>
+                            <input type="text" class="form-control" id="location" name="location"
+                                   value="{{ equipment.location if equipment else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ equipment.description if equipment else '' }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Durum</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="available" {% if equipment and equipment.status == 'available' %}selected{% endif %}>Müsait</option>
+                                <option value="in_use" {% if equipment and equipment.status == 'in_use' %}selected{% endif %}>Kullanımda</option>
+                                <option value="maintenance" {% if equipment and equipment.status == 'maintenance' %}selected{% endif %}>Bakımda</option>
+                                <option value="faulty" {% if equipment and equipment.status == 'faulty' %}selected{% endif %}>Arızalı</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="calibration_interval_days" class="form-label">Kalibrasyon Periyodu (Gün)</label>
+                            <input type="number" class="form-control" id="calibration_interval_days" name="calibration_interval_days"
+                                   value="{{ equipment.calibration_interval_days if equipment else 365 }}" min="1">
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-{{ 'warning' if equipment else 'success' }}">
+                            <i class="fas fa-{{ 'save' if equipment else 'plus' }}"></i> {% if equipment %}Güncelle{% else %}Ekle{% endif %}
+                        </button>
+                        <a href="{{ url_for('equipment_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> İptal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
