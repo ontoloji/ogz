@@ -1,0 +1,206 @@
+.calendar-container {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.calendar-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.events-count {
+  background: var(--primary-color);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.event-input-section {
+  background: #f7fafc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+.event-input {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.event-datetime-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.event-date-input,
+.event-time-input {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.event-description-input {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.events-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.events-section h3 {
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: 12px;
+  border-left: 4px solid var(--info-color);
+  transition: all 0.2s ease;
+}
+
+.event-item:hover {
+  background: #edf2f7;
+  transform: translateX(4px);
+}
+
+.event-item.upcoming {
+  border-left-color: var(--success-color);
+}
+
+.event-item.past {
+  border-left-color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.event-item.completed {
+  opacity: 0.6;
+}
+
+.event-checkbox {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.event-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.event-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.event-item.completed .event-title {
+  text-decoration: line-through;
+}
+
+.event-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.event-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.event-countdown {
+  font-size: 12px;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.btn-delete {
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .event-datetime-row {
+    flex-direction: column;
+  }
+
+  .event-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-delete {
+    align-self: flex-end;
+  }
+}
