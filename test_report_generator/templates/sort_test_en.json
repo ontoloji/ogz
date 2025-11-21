@@ -1,0 +1,169 @@
+{
+  "template_name": "SORT Test Report",
+  "language": "en",
+  "version": "1.0",
+  "sections": [
+    {
+      "id": "cover",
+      "title": "Cover Page",
+      "enabled": true,
+      "fields": [
+        "company_logo",
+        "report_title",
+        "test_type",
+        "vehicle_info",
+        "test_date",
+        "report_date"
+      ]
+    },
+    {
+      "id": "summary",
+      "title": "Executive Summary",
+      "enabled": true,
+      "content": [
+        "test_objective",
+        "test_results_summary",
+        "conclusion",
+        "pass_fail_status"
+      ]
+    },
+    {
+      "id": "test_info",
+      "title": "Test Information",
+      "enabled": true,
+      "subsections": [
+        {
+          "title": "General Information",
+          "fields": [
+            {"label": "Test Type", "key": "test_type"},
+            {"label": "Test Date", "key": "test_date"},
+            {"label": "Test Location", "key": "test_location"},
+            {"label": "Test Engineer", "key": "test_engineer"}
+          ]
+        },
+        {
+          "title": "Vehicle Information",
+          "fields": [
+            {"label": "Vehicle Type", "key": "vehicle_type"},
+            {"label": "License Plate", "key": "vehicle_plate"},
+            {"label": "Odometer", "key": "odometer"},
+            {"label": "Driver", "key": "driver"}
+          ]
+        },
+        {
+          "title": "Environmental Conditions",
+          "fields": [
+            {"label": "Ambient Temperature", "key": "ambient_temperature", "unit": "°C"},
+            {"label": "Humidity", "key": "humidity", "unit": "%"},
+            {"label": "Pressure", "key": "pressure", "unit": "hPa"},
+            {"label": "Wind", "key": "wind", "unit": "km/h"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "test_results",
+      "title": "Test Results",
+      "enabled": true,
+      "content": [
+        {
+          "type": "statistics_table",
+          "title": "Main Results",
+          "metrics": [
+            {"label": "Total Duration", "key": "total_duration", "unit": "s"},
+            {"label": "Total Distance", "key": "total_distance", "unit": "m"},
+            {"label": "Average Speed", "key": "avg_speed", "unit": "km/h"},
+            {"label": "Maximum Speed", "key": "max_speed", "unit": "km/h"},
+            {"label": "Total Energy", "key": "total_energy", "unit": "Wh"},
+            {"label": "Energy Consumption", "key": "energy_consumption", "unit": "kWh/100km"}
+          ]
+        },
+        {
+          "type": "detailed_statistics",
+          "title": "Detailed Statistics",
+          "columns": ["Average", "Minimum", "Maximum", "Std. Deviation", "Median"],
+          "parameters": ["Speed", "Throttle", "Distance", "Energy"]
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "title": "Charts and Analysis",
+      "enabled": true,
+      "charts": [
+        {
+          "type": "speed_profile",
+          "title": "Speed Profile",
+          "description": "Speed profile recorded during test"
+        },
+        {
+          "type": "energy_consumption",
+          "title": "Energy Consumption",
+          "description": "Cumulative energy consumption and instantaneous power"
+        },
+        {
+          "type": "dashboard",
+          "title": "Overview Dashboard",
+          "description": "View of all main parameters"
+        }
+      ]
+    },
+    {
+      "id": "comparison",
+      "title": "Comparison and Analysis",
+      "enabled": true,
+      "content": [
+        {
+          "type": "multi_test_comparison",
+          "title": "Multi-Test Comparison",
+          "description": "Comparative analysis of multiple tests"
+        },
+        {
+          "type": "statistics_comparison",
+          "title": "Statistical Comparison"
+        }
+      ]
+    },
+    {
+      "id": "requirements",
+      "title": "Requirements Check",
+      "enabled": true,
+      "content": [
+        {
+          "type": "requirement_table",
+          "title": "Requirements Compliance Status",
+          "columns": ["Requirement", "Target", "Actual", "Status"]
+        },
+        {
+          "type": "pass_fail_summary",
+          "title": "Pass/Fail Summary"
+        }
+      ]
+    },
+    {
+      "id": "appendix",
+      "title": "Appendix",
+      "enabled": true,
+      "content": [
+        {
+          "type": "raw_data_preview",
+          "title": "Raw Data Preview",
+          "description": "First and last 100 rows of test data"
+        },
+        {
+          "type": "test_metadata",
+          "title": "Test Metadata"
+        }
+      ]
+    }
+  ],
+  "footer": {
+    "left": "OTOKAR Test Report",
+    "center": "{test_type}",
+    "right": "Page {page_num} / {total_pages}"
+  },
+  "header": {
+    "left": "{company_name}",
+    "right": "{test_date}"
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "template_name": "SORT Test Raporu",
+  "language": "tr",
+  "version": "1.0",
+  "sections": [
+    {
+      "id": "cover",
+      "title": "Kapak Sayfası",
+      "enabled": true,
+      "fields": [
+        "company_logo",
+        "report_title",
+        "test_type",
+        "vehicle_info",
+        "test_date",
+        "report_date"
+      ]
+    },
+    {
+      "id": "summary",
+      "title": "Yönetici Özeti",
+      "enabled": true,
+      "content": [
+        "test_objective",
+        "test_results_summary",
+        "conclusion",
+        "pass_fail_status"
+      ]
+    },
+    {
+      "id": "test_info",
+      "title": "Test Bilgileri",
+      "enabled": true,
+      "subsections": [
+        {
+          "title": "Genel Bilgiler",
+          "fields": [
+            {"label": "Test Tipi", "key": "test_type"},
+            {"label": "Test Tarihi", "key": "test_date"},
+            {"label": "Test Yeri", "key": "test_location"},
+            {"label": "Test Mühendisi", "key": "test_engineer"}
+          ]
+        },
+        {
+          "title": "Araç Bilgileri",
+          "fields": [
+            {"label": "Araç Tipi", "key": "vehicle_type"},
+            {"label": "Araç Plakası", "key": "vehicle_plate"},
+            {"label": "Kilometre", "key": "odometer"},
+            {"label": "Sürücü", "key": "driver"}
+          ]
+        },
+        {
+          "title": "Çevre Koşulları",
+          "fields": [
+            {"label": "Dış Sıcaklık", "key": "ambient_temperature", "unit": "°C"},
+            {"label": "Nem", "key": "humidity", "unit": "%"},
+            {"label": "Basınç", "key": "pressure", "unit": "hPa"},
+            {"label": "Rüzgar", "key": "wind", "unit": "km/h"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "test_results",
+      "title": "Test Sonuçları",
+      "enabled": true,
+      "content": [
+        {
+          "type": "statistics_table",
+          "title": "Ana Sonuçlar",
+          "metrics": [
+            {"label": "Toplam Süre", "key": "total_duration", "unit": "s"},
+            {"label": "Toplam Mesafe", "key": "total_distance", "unit": "m"},
+            {"label": "Ortalama Hız", "key": "avg_speed", "unit": "km/h"},
+            {"label": "Maksimum Hız", "key": "max_speed", "unit": "km/h"},
+            {"label": "Toplam Enerji", "key": "total_energy", "unit": "Wh"},
+            {"label": "Enerji Tüketimi", "key": "energy_consumption", "unit": "kWh/100km"}
+          ]
+        },
+        {
+          "type": "detailed_statistics",
+          "title": "Detaylı İstatistikler",
+          "columns": ["Ortalama", "Minimum", "Maksimum", "Standart Sapma", "Medyan"],
+          "parameters": ["Speed", "Throttle", "Distance", "Energy"]
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "title": "Grafikler ve Analizler",
+      "enabled": true,
+      "charts": [
+        {
+          "type": "speed_profile",
+          "title": "Hız Profili",
+          "description": "Test sırasında kaydedilen hız profili"
+        },
+        {
+          "type": "energy_consumption",
+          "title": "Enerji Tüketimi",
+          "description": "Kümülatif enerji tüketimi ve anlık güç"
+        },
+        {
+          "type": "dashboard",
+          "title": "Genel Bakış Dashboard",
+          "description": "Tüm ana parametrelerin görünümü"
+        }
+      ]
+    },
+    {
+      "id": "comparison",
+      "title": "Karşılaştırma ve Analiz",
+      "enabled": true,
+      "content": [
+        {
+          "type": "multi_test_comparison",
+          "title": "Çoklu Test Karşılaştırması",
+          "description": "Birden fazla testin karşılaştırmalı analizi"
+        },
+        {
+          "type": "statistics_comparison",
+          "title": "İstatistiksel Karşılaştırma"
+        }
+      ]
+    },
+    {
+      "id": "requirements",
+      "title": "Gereksinim Kontrolü",
+      "enabled": true,
+      "content": [
+        {
+          "type": "requirement_table",
+          "title": "Gereksinim Karşılama Durumu",
+          "columns": ["Gereksinim", "Hedef", "Gerçekleşen", "Durum"]
+        },
+        {
+          "type": "pass_fail_summary",
+          "title": "Başarı/Başarısızlık Özeti"
+        }
+      ]
+    },
+    {
+      "id": "appendix",
+      "title": "Ekler",
+      "enabled": true,
+      "content": [
+        {
+          "type": "raw_data_preview",
+          "title": "Ham Veri Önizlemesi",
+          "description": "İlk ve son 100 satır test verisi"
+        },
+        {
+          "type": "test_metadata",
+          "title": "Test Metadata"
+        }
+      ]
+    }
+  ],
+  "footer": {
+    "left": "OTOKAR Test Raporu",
+    "center": "{test_type}",
+    "right": "Sayfa {page_num} / {total_pages}"
+  },
+  "header": {
+    "left": "{company_name}",
+    "right": "{test_date}"
+  }
+}

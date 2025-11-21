@@ -25,3 +25,10 @@ python-dateutil>=2.8.2
 
 # Grafik (opsiyonel - test için)
 matplotlib>=3.7.0  # PID test grafiği için
+seaborn>=0.12.0  # Gelişmiş grafikler için
+
+# Rapor Oluşturma
+reportlab>=4.0.0  # PDF raporları için
+python-docx>=1.1.0  # Word belgeleri için
+Pillow>=10.0.0  # Görsel işleme (logo, grafik embedding)
+xlsxwriter>=3.1.0  # Gelişmiş Excel raporları için
