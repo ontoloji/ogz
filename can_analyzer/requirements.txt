@@ -1,0 +1,36 @@
+# CAN Bus Analyzer Requirements
+# Windows 10/11 Compatible
+
+# Core CAN Bus Libraries
+python-can>=4.3.1
+cantools>=39.4.0
+
+# Kvaser Support (Windows)
+# Note: Kvaser CANlib SDK must be installed separately from Kvaser website
+# https://www.kvaser.com/downloads/
+
+# GUI Framework
+PyQt5>=5.15.10
+PyQt5-Qt5>=5.15.2
+PyQt5-sip>=12.13.0
+
+# Data Processing
+pandas>=2.1.4
+numpy>=1.26.2
+
+# Visualization
+matplotlib>=3.8.2
+pyqtgraph>=0.13.3
+
+# Excel Export
+openpyxl>=3.1.2
+xlsxwriter>=3.1.9
+
+# Windows-specific
+pywin32>=306
+
+# Packaging
+pyinstaller>=6.3.0
+
+# Utilities
+python-dateutil>=2.8.2
