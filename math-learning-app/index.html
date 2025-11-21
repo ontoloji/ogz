@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematik Öğrenme Uygulaması 🎓</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Ana Container -->
+    <div id="app" class="app-container">
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🎓</span>
+                <h1>Matematik Dünyası</h1>
+            </div>
+            <div class="user-info">
+                <div class="user-stats">
+                    <span class="stat-item">
+                        <span class="icon">⭐</span>
+                        <span id="user-points">0</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="icon">🔥</span>
+                        <span id="user-streak">0</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="icon">🏆</span>
+                        <span id="user-badges">0</span>
+                    </span>
+                </div>
+                <button id="profile-btn" class="icon-btn">👤</button>
+            </div>
+        </header>
+
+        <!-- Ana Menü Ekranı -->
+        <section id="home-screen" class="screen active">
+            <div class="welcome-section">
+                <h2 id="welcome-message">Hoş Geldin! 👋</h2>
+                <p id="daily-tip" class="daily-tip"></p>
+            </div>
+
+            <div class="menu-grid">
+                <button class="menu-card" data-action="start-learning">
+                    <span class="card-icon">📚</span>
+                    <h3>Öğrenmeye Başla</h3>
+                    <p>Konuları öğren ve pratik yap</p>
+                </button>
+
+                <button class="menu-card" data-action="daily-challenge">
+                    <span class="card-icon">🎯</span>
+                    <h3>Günlük Meydan Okuma</h3>
+                    <p>Bugünün özel soruları</p>
+                    <span class="badge" id="daily-badge">YENİ</span>
+                </button>
+
+                <button class="menu-card" data-action="practice">
+                    <span class="card-icon">✏️</span>
+                    <h3>Serbest Pratik</h3>
+                    <p>İstediğin konuda çalış</p>
+                </button>
+
+                <button class="menu-card" data-action="progress">
+                    <span class="card-icon">📊</span>
+                    <h3>İlerleme Durumum</h3>
+                    <p>İstatistiklerin ve başarıların</p>
+                </button>
+
+                <button class="menu-card" data-action="weak-topics">
+                    <span class="card-icon">💡</span>
+                    <h3>Güçlendir</h3>
+                    <p>Zayıf konularını iyileştir</p>
+                </button>
+
+                <button class="menu-card" data-action="achievements">
+                    <span class="card-icon">🏅</span>
+                    <h3>Rozetlerim</h3>
+                    <p>Kazandığın ödüller</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- Konu Seçimi Ekranı -->
+        <section id="subject-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn">← Geri</button>
+                <h2>Konu Seç</h2>
+            </div>
+
+            <div class="difficulty-selector">
+                <label>Zorluk Seviyesi:</label>
+                <div class="difficulty-btns">
+                    <button class="difficulty-btn active" data-level="easy">
+                        <span class="icon">🌱</span>
+                        <span>Kolay</span>
+                    </button>
+                    <button class="difficulty-btn" data-level="medium">
+                        <span class="icon">🌿</span>
+                        <span>Orta</span>
+                    </button>
+                    <button class="difficulty-btn" data-level="hard">
+                        <span class="icon">🌳</span>
+                        <span>Zor</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="subjects-container" class="subjects-grid"></div>
+        </section>
+
+        <!-- Soru Çözme Ekranı -->
+        <section id="question-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn">← Geri</button>
+                <div class="question-progress">
+                    <span id="question-counter">Soru 1/10</span>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-container">
+                <div class="question-header">
+                    <h3 id="question-topic">Kesirler - Toplama</h3>
+                    <div class="question-difficulty"></div>
+                </div>
+
+                <div id="question-content" class="question-content">
+                    <!-- Soru buraya dinamik olarak yüklenecek -->
+                </div>
+
+                <div id="visualization-area" class="visualization-area">
+                    <!-- Görsel açıklamalar buraya gelecek -->
+                </div>
+
+                <div id="answer-area" class="answer-area">
+                    <!-- Cevap alanı (çoktan seçmeli veya yazılı) -->
+                </div>
+
+                <div class="question-actions">
+                    <button id="hint-btn" class="secondary-btn">
+                        <span class="icon">💡</span>
+                        İpucu
+                    </button>
+                    <button id="solution-btn" class="secondary-btn">
+                        <span class="icon">📖</span>
+                        Çözüm
+                    </button>
+                    <button id="check-btn" class="primary-btn">
+                        Cevabı Kontrol Et
+                    </button>
+                </div>
+
+                <div id="feedback-area" class="feedback-area hidden">
+                    <!-- Doğru/yanlış geri bildirimi -->
+                </div>
+
+                <div id="solution-steps" class="solution-steps hidden">
+                    <!-- Adım adım çözüm -->
+                </div>
+            </div>
+        </section>
+
+        <!-- İstatistikler Ekranı -->
+        <section id="stats-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn">← Geri</button>
+                <h2>İlerleme Durumum</h2>
+            </div>
+
+            <div class="stats-container">
+                <div class="stats-overview">
+                    <div class="stat-card">
+                        <span class="stat-icon">📝</span>
+                        <div class="stat-info">
+                            <span class="stat-value" id="total-questions">0</span>
+                            <span class="stat-label">Çözülen Soru</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">✅</span>
+                        <div class="stat-info">
+                            <span class="stat-value" id="correct-rate">0%</span>
+                            <span class="stat-label">Doğruluk Oranı</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">⏱️</span>
+                        <div class="stat-info">
+                            <span class="stat-value" id="study-time">0</span>
+                            <span class="stat-label">Çalışma Saati</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🎯</span>
+                        <div class="stat-info">
+                            <span class="stat-value" id="completed-topics">0</span>
+                            <span class="stat-label">Tamamlanan Konu</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Konu Bazında Performans</h3>
+                    <div id="subject-performance-chart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Haftalık İlerleme</h3>
+                    <div id="weekly-progress-chart" class="chart-container"></div>
+                </div>
+
+                <div class="weak-topics-section">
+                    <h3>Geliştirilmesi Gereken Konular</h3>
+                    <div id="weak-topics-list" class="weak-topics-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rozetler Ekranı -->
+        <section id="achievements-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn">← Geri</button>
+                <h2>Rozetlerim ve Başarılarım</h2>
+            </div>
+
+            <div class="achievements-container">
+                <div class="achievement-summary">
+                    <h3>Toplam Rozet: <span id="total-badges-count">0</span></h3>
+                </div>
+                <div id="badges-grid" class="badges-grid"></div>
+            </div>
+        </section>
+
+        <!-- Ebeveyn Raporu Ekranı -->
+        <section id="parent-report-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn">← Geri</button>
+                <h2>Ebeveyn Raporu</h2>
+            </div>
+
+            <div class="report-container">
+                <div class="report-section">
+                    <h3>Genel Durum</h3>
+                    <div id="parent-overview" class="report-content"></div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Haftalık Aktivite</h3>
+                    <div id="parent-activity" class="report-content"></div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Güçlü ve Zayıf Yönler</h3>
+                    <div id="parent-strengths" class="report-content"></div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Öneriler</h3>
+                    <div id="parent-recommendations" class="report-content"></div>
+                </div>
+
+                <button id="export-report-btn" class="primary-btn">
+                    <span class="icon">📄</span>
+                    Raporu İndir
+                </button>
+            </div>
+        </section>
+
+        <!-- Profil Modal -->
+        <div id="profile-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Profilim</h2>
+                    <button class="close-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-info">
+                        <div class="profile-avatar">👤</div>
+                        <input type="text" id="username-input" placeholder="İsmin" class="input-field">
+                        <button id="save-username-btn" class="secondary-btn">Kaydet</button>
+                    </div>
+                    <div class="profile-actions">
+                        <button id="parent-report-btn" class="menu-item">
+                            <span class="icon">👨‍👩‍👧</span>
+                            Ebeveyn Raporu
+                        </button>
+                        <button id="reset-progress-btn" class="menu-item danger">
+                            <span class="icon">🔄</span>
+                            İlerlemeyi Sıfırla
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Başarı Toast Bildirimi -->
+        <div id="achievement-toast" class="toast hidden">
+            <div class="toast-content">
+                <span class="toast-icon">🎉</span>
+                <div class="toast-message">
+                    <strong>Yeni Rozet Kazandın!</strong>
+                    <span id="toast-text"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Modülleri -->
+    <script src="js/utils.js"></script>
+    <script src="js/subjects.js"></script>
+    <script src="js/questions.js"></script>
+    <script src="js/user-profile.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/visualizations.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
