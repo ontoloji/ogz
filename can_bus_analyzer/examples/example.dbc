@@ -1,0 +1,116 @@
+VERSION ""
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_SGTYPE_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: ECU1 ECU2 ECU3
+
+BO_ 100 EngineStatus: 8 ECU1
+ SG_ EngineSpeed : 0|16@1+ (1,0) [0|8000] "rpm" ECU2,ECU3
+ SG_ EngineTemperature : 16|8@1+ (1,-40) [-40|215] "degC" ECU2,ECU3
+ SG_ ThrottlePosition : 24|8@1+ (0.39,0) [0|100] "%" ECU2,ECU3
+ SG_ EngineLoad : 32|8@1+ (0.39,0) [0|100] "%" ECU2,ECU3
+
+BO_ 200 VehicleSpeed: 8 ECU2
+ SG_ VehicleSpeed : 0|16@1+ (0.01,0) [0|655] "km/h" ECU1,ECU3
+ SG_ WheelSpeedFL : 16|16@1+ (0.01,0) [0|655] "km/h" ECU1,ECU3
+ SG_ WheelSpeedFR : 32|16@1+ (0.01,0) [0|655] "km/h" ECU1,ECU3
+ SG_ WheelSpeedRL : 48|8@1+ (0.01,0) [0|255] "km/h" ECU1,ECU3
+
+BO_ 300 BatteryStatus: 8 ECU3
+ SG_ BatteryVoltage : 0|16@1+ (0.01,0) [0|20] "V" ECU1,ECU2
+ SG_ BatteryCurrent : 16|16@1- (0.1,-500) [-500|500] "A" ECU1,ECU2
+ SG_ BatterySOC : 32|8@1+ (1,0) [0|100] "%" ECU1,ECU2
+ SG_ BatteryTemperature : 40|8@1+ (1,-40) [-40|100] "degC" ECU1,ECU2
+
+BO_ 400 GearboxInfo: 4 ECU1
+ SG_ CurrentGear : 0|4@1+ (1,0) [0|8] "" ECU2,ECU3
+ SG_ TargetGear : 4|4@1+ (1,0) [0|8] "" ECU2,ECU3
+ SG_ ClutchPosition : 8|8@1+ (0.39,0) [0|100] "%" ECU2,ECU3
+ SG_ GearboxTemperature : 16|8@1+ (1,-40) [-40|150] "degC" ECU2,ECU3
+
+BO_ 500 BrakeSystem: 8 ECU2
+ SG_ BrakePressure : 0|16@1+ (0.1,0) [0|300] "bar" ECU1,ECU3
+ SG_ ABSActive : 16|1@1+ (1,0) [0|1] "" ECU1,ECU3
+ SG_ ESPActive : 17|1@1+ (1,0) [0|1] "" ECU1,ECU3
+ SG_ TCSActive : 18|1@1+ (1,0) [0|1] "" ECU1,ECU3
+ SG_ BrakePedalPosition : 24|8@1+ (0.39,0) [0|100] "%" ECU1,ECU3
+
+BO_ 600 SteeringInfo: 4 ECU2
+ SG_ SteeringAngle : 0|16@1- (0.1,-3276.8) [-3276.8|3276.7] "deg" ECU1,ECU3
+ SG_ SteeringTorque : 16|16@1- (0.1,-3276.8) [-100|100] "Nm" ECU1,ECU3
+
+
+
+CM_ BU_ ECU1 "Engine Control Unit";
+CM_ BU_ ECU2 "Vehicle Dynamics Control Unit";
+CM_ BU_ ECU3 "Battery Management System";
+
+CM_ BO_ 100 "Engine status information including RPM, temperature and load";
+CM_ BO_ 200 "Vehicle and wheel speed information";
+CM_ BO_ 300 "Battery voltage, current and state of charge";
+CM_ BO_ 400 "Gearbox status and gear information";
+CM_ BO_ 500 "Brake system status and safety features";
+CM_ BO_ 600 "Steering angle and torque measurements";
+
+CM_ SG_ 100 EngineSpeed "Engine rotational speed in RPM";
+CM_ SG_ 100 EngineTemperature "Coolant temperature in degrees Celsius";
+CM_ SG_ 100 ThrottlePosition "Throttle pedal position percentage";
+CM_ SG_ 100 EngineLoad "Current engine load percentage";
+
+CM_ SG_ 200 VehicleSpeed "Vehicle speed from CAN network";
+CM_ SG_ 200 WheelSpeedFL "Front left wheel speed";
+CM_ SG_ 200 WheelSpeedFR "Front right wheel speed";
+CM_ SG_ 200 WheelSpeedRL "Rear left wheel speed";
+
+CM_ SG_ 300 BatteryVoltage "Battery voltage in Volts";
+CM_ SG_ 300 BatteryCurrent "Battery current in Amperes (positive=charging)";
+CM_ SG_ 300 BatterySOC "State of Charge in percentage";
+CM_ SG_ 300 BatteryTemperature "Battery temperature in degrees Celsius";
+
+BA_DEF_ "BusType" STRING ;
+BA_DEF_ BO_ "GenMsgCycleTime" INT 0 10000;
+BA_DEF_ SG_ "GenSigStartValue" FLOAT 0 100000000000;
+
+BA_DEF_DEF_ "BusType" "CAN";
+BA_DEF_DEF_ BO_ "GenMsgCycleTime" 0;
+BA_DEF_DEF_ SG_ "GenSigStartValue" 0;
+
+BA_ "GenMsgCycleTime" BO_ 100 10;
+BA_ "GenMsgCycleTime" BO_ 200 20;
+BA_ "GenMsgCycleTime" BO_ 300 100;
+BA_ "GenMsgCycleTime" BO_ 400 50;
+BA_ "GenMsgCycleTime" BO_ 500 10;
+BA_ "GenMsgCycleTime" BO_ 600 10;
+
+VAL_ 400 CurrentGear 0 "Park" 1 "Reverse" 2 "Neutral" 3 "Drive" 4 "Sport" 5 "Manual1" 6 "Manual2" 7 "Manual3" 8 "Manual4" ;
+VAL_ 500 ABSActive 0 "Inactive" 1 "Active" ;
+VAL_ 500 ESPActive 0 "Inactive" 1 "Active" ;
+VAL_ 500 TCSActive 0 "Inactive" 1 "Active" ;

@@ -1,0 +1,32 @@
+# CAN Bus Analyzer - Python Bağımlılıkları
+# Windows 10/11 için gerekli paketler
+
+# CAN Bus İletişimi
+python-can>=4.3.0
+# Kvaser driver desteği (Windows için)
+# Not: Kvaser CANlib SDK ayrıca kurulmalıdır: https://www.kvaser.com/downloads-kvaser/
+
+# DBC Dosya İşleme
+cantools>=39.0.0
+
+# Veri İşleme ve Analiz
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Excel Desteği
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Grafik ve Görselleştirme
+matplotlib>=3.7.0
+
+# Windows GUI (Tkinter built-in olarak gelir, ek kurulum gerekmez)
+
+# Logging ve Diğer
+python-dateutil>=2.8.0
+
+# EXE Oluşturma (Development)
+pyinstaller>=6.0.0
+
+# Opsiyonel: Vector BLF dosya desteği
+# python-can-vector>=1.0.0

@@ -1,0 +1,42 @@
+{
+  "application": {
+    "name": "CAN Bus Analyzer",
+    "version": "1.0.0",
+    "author": "CAN Tools Development Team"
+  },
+  "can_settings": {
+    "default_channel": 0,
+    "default_bitrate": 500000,
+    "interface": "kvaser",
+    "supported_bitrates": [125000, 250000, 500000, 1000000]
+  },
+  "gui_settings": {
+    "window_width": 1400,
+    "window_height": 900,
+    "theme": "default",
+    "update_interval_ms": 100,
+    "max_messages_display": 100
+  },
+  "plot_settings": {
+    "max_points": 1000,
+    "line_width": 1.5,
+    "dpi": 150,
+    "default_colors": ["blue", "red", "green", "orange", "purple"]
+  },
+  "export_settings": {
+    "default_format": "xlsx",
+    "include_decoded": true,
+    "timestamp_format": "%Y-%m-%d %H:%M:%S.%f"
+  },
+  "paths": {
+    "default_dbc_dir": "examples",
+    "default_log_dir": "logs",
+    "default_export_dir": "exports"
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "can_analyzer.log",
+    "max_size_mb": 10,
+    "backup_count": 3
+  }
+}
