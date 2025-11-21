@@ -1,0 +1,19 @@
+# Elektrikli Araç Enerji Tüketimi Analiz Sistemi
+# Python 3.8+ gereklidir
+
+# Veri işleme
+pandas>=1.5.0
+numpy>=1.23.0
+openpyxl>=3.0.10
+
+# Grafik oluşturma
+matplotlib>=3.6.0
+
+# PDF oluşturma
+reportlab>=3.6.0
+
+# GUI (Windows ile birlikte gelir, ek kurulum gerekmez)
+# tkinter (yerleşik)
+
+# .exe derleme için (opsiyonel)
+pyinstaller>=5.7.0
