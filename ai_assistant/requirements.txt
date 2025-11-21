@@ -1,0 +1,18 @@
+# Windows AI Kişisel Asistan
+# Gerekli Python Kütüphaneleri
+
+# System Tray Icon
+pystray>=0.19.5
+Pillow>=10.0.0
+
+# Global Hotkey
+keyboard>=0.13.5
+
+# Tarih/Saat İşlemleri
+python-dateutil>=2.8.2
+
+# Windows Toast Notifications (Opsiyonel)
+win10toast>=0.9
+
+# Tkinter (Python ile birlikte gelir, ayrıca kurulum gerekmez)
+# sqlite3 (Python ile birlikte gelir, ayrıca kurulum gerekmez)
