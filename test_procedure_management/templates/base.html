@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #16a085;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .sidebar {
+            background: white;
+            min-height: calc(100vh - 56px);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            padding: 1.5rem 0;
+        }
+
+        .sidebar .nav-link {
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #f8f9fa;
+            border-left-color: var(--secondary-color);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #e9ecef;
+            border-left-color: var(--secondary-color);
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .badge-level {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 20px;
+        }
+
+        .badge-status {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 20px;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        .stat-card p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .language-selector {
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .language-selector .btn {
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            transition: background-color 0.3s;
+        }
+
+        .language-selector .btn.active {
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+        }
+
+        .procedure-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .step-item {
+            border-left: 3px solid var(--secondary-color);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+                <i class="fas fa-clipboard-check me-2"></i>
+                {{ app_name }}
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <div class="language-selector d-flex">
+                            <a href="{{ url_for('set_language', lang='tr') }}"
+                               class="btn btn-sm {% if current_language == 'tr' %}active{% endif %}">
+                                TR
+                            </a>
+                            <a href="{{ url_for('set_language', lang='en') }}"
+                               class="btn btn-sm {% if current_language == 'en' %}active{% endif %}">
+                                EN
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 p-0">
+                <div class="sidebar">
+                    <nav class="nav flex-column">
+                        <a class="nav-link {% if request.endpoint and 'dashboard' in request.endpoint %}active{% endif %}"
+                           href="{{ url_for('dashboard.index') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            {% if current_language == 'tr' %}Panel{% else %}Dashboard{% endif %}
+                        </a>
+
+                        <a class="nav-link {% if request.endpoint and 'procedures' in request.endpoint %}active{% endif %}"
+                           href="{{ url_for('procedures.index') }}">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            {% if current_language == 'tr' %}Test Prosedürleri{% else %}Test Procedures{% endif %}
+                        </a>
+
+                        <a class="nav-link {% if request.endpoint and 'results' in request.endpoint %}active{% endif %}"
+                           href="{{ url_for('results.index') }}">
+                            <i class="fas fa-chart-line me-2"></i>
+                            {% if current_language == 'tr' %}Test Sonuçları{% else %}Test Results{% endif %}
+                        </a>
+
+                        <a class="nav-link {% if request.endpoint and 'backup' in request.endpoint %}active{% endif %}"
+                           href="{{ url_for('backup.index') }}">
+                            <i class="fas fa-database me-2"></i>
+                            {% if current_language == 'tr' %}Yedekleme{% else %}Backup{% endif %}
+                        </a>
+
+                        <hr>
+
+                        <a class="nav-link" href="{{ url_for('dashboard.statistics') }}">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            {% if current_language == 'tr' %}İstatistikler{% else %}Statistics{% endif %}
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div class="main-content">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Page Content -->
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 {{ app_name }} |
+                {% if current_language == 'tr' %}Tüm hakları saklıdır{% else %}All rights reserved{% endif %}
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery (optional, for easier JS) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}{% if language == 'tr' %}Panel{% else %}Dashboard{% endif %} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>
+            <i class="fas fa-tachometer-alt me-2"></i>
+            {% if language == 'tr' %}Panel Genel Görünüm{% else %}Dashboard Overview{% endif %}
+        </h2>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+            <h3>{{ total_procedures }}</h3>
+            <p>{% if language == 'tr' %}Test Prosedürü{% else %}Test Procedures{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <i class="fas fa-vial fa-2x mb-2"></i>
+            <h3>{{ total_results }}</h3>
+            <p>{% if language == 'tr' %}Toplam Test{% else %}Total Tests{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <i class="fas fa-check-circle fa-2x mb-2"></i>
+            <h3>{{ pass_rate }}%</h3>
+            <p>{% if language == 'tr' %}Başarı Oranı{% else %}Pass Rate{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <i class="fas fa-user-check fa-2x mb-2"></i>
+            <h3>{{ pass_count }}</h3>
+            <p>{% if language == 'tr' %}Başarılı Test{% else %}Passed Tests{% endif %}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Test Results -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    {% if language == 'tr' %}Son Test Sonuçları{% else %}Recent Test Results{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_results %}
+                    <div class="list-group list-group-flush">
+                        {% for result in recent_results %}
+                            <a href="{{ url_for('results.view', id=result.id) }}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="procedure-code">{{ result.procedure.procedure_code }}</span>
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ result.operator }} - {{ result.test_date|datetime('%Y-%m-%d %H:%M') }}
+                                        </small>
+                                    </div>
+                                    <span class="badge badge-status
+                                        {% if result.status == 'PASS' %}bg-success
+                                        {% elif result.status == 'FAIL' %}bg-danger
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ result.status }}
+                                    </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        {% if language == 'tr' %}Henüz test sonucu yok{% else %}No test results yet{% endif %}
+                    </p>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('results.index') }}" class="btn btn-sm btn-outline-primary">
+                    {% if language == 'tr' %}Tümünü Gör{% else %}View All{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Distribution by Category -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    {% if language == 'tr' %}Kategorilere Göre Testler{% else %}Tests by Category{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if category_stats %}
+                    {% for category, count in category_stats %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>{{ category }}</span>
+                                <span class="badge bg-secondary">{{ count }}</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar" role="progressbar"
+                                     style="width: {{ (count / total_procedures * 100)|round }}%"
+                                     aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ total_procedures }}">
+                                    {{ (count / total_procedures * 100)|round }}%
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        {% if language == 'tr' %}Veri bulunamadı{% else %}No data available{% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Most Tested Procedures -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-fire me-2"></i>
+                    {% if language == 'tr' %}En Çok Test Edilen Prosedürler{% else %}Most Tested Procedures{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if most_tested %}
+                    <div class="list-group list-group-flush">
+                        {% for procedure, count in most_tested %}
+                            <a href="{{ url_for('procedures.view', id=procedure.id) }}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="procedure-code">{{ procedure.procedure_code }}</span>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if language == 'tr' %}{{ procedure.title_tr }}{% else %}{{ procedure.title_en }}{% endif %}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-primary">{{ count }} {% if language == 'tr' %}test{% else %}tests{% endif %}</span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        {% if language == 'tr' %}Veri bulunamadı{% else %}No data available{% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Results Summary -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    {% if language == 'tr' %}Test Sonuçları Özeti{% else %}Test Results Summary{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="p-3">
+                            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                            <h4>{{ pass_count }}</h4>
+                            <p class="text-muted mb-0">{% if language == 'tr' %}Başarılı{% else %}Pass{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3">
+                            <i class="fas fa-times-circle fa-3x text-danger mb-2"></i>
+                            <h4>{{ fail_count }}</h4>
+                            <p class="text-muted mb-0">{% if language == 'tr' %}Başarısız{% else %}Fail{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3">
+                            <i class="fas fa-exclamation-circle fa-3x text-warning mb-2"></i>
+                            <h4>{{ partial_count }}</h4>
+                            <p class="text-muted mb-0">{% if language == 'tr' %}Kısmi{% else %}Partial{% endif %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="text-center">
+                    <h6>{% if language == 'tr' %}Son 30 Gün Trend{% else %}Last 30 Days Trend{% endif %}</h6>
+                    <canvas id="trendChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    {% if language == 'tr' %}Hızlı İşlemler{% else %}Quick Actions{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('procedures.create') }}" class="btn btn-lg btn-primary w-100 mb-2">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            {% if language == 'tr' %}Yeni Prosedür{% else %}New Procedure{% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('results.create') }}" class="btn btn-lg btn-success w-100 mb-2">
+                            <i class="fas fa-vial me-2"></i>
+                            {% if language == 'tr' %}Yeni Test Sonucu{% else %}New Test Result{% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('backup.index') }}" class="btn btn-lg btn-warning w-100 mb-2">
+                            <i class="fas fa-database me-2"></i>
+                            {% if language == 'tr' %}Yedekleme{% else %}Backup{% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('dashboard.statistics') }}" class="btn btn-lg btn-info w-100 mb-2">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            {% if language == 'tr' %}İstatistikler{% else %}Statistics{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Trend Chart
+const ctx = document.getElementById('trendChart');
+const trendData = {{ completion_trend|tojson }};
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: trendData.map(d => d.date.substring(5)),
+        datasets: [{
+            label: '{% if language == "tr" %}Test Sayısı{% else %}Number of Tests{% endif %}',
+            data: trendData.map(d => d.count),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

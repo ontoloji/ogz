@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{% if language == 'tr' %}Test Prosedürleri{% else %}Test Procedures{% endif %} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>
+            <i class="fas fa-clipboard-list me-2"></i>
+            {% if language == 'tr' %}Test Prosedürleri{% else %}Test Procedures{% endif %}
+        </h2>
+    </div>
+    <div class="col text-end">
+        <a href="{{ url_for('procedures.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            {% if language == 'tr' %}Yeni Prosedür{% else %}New Procedure{% endif %}
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('procedures.index') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="search" placeholder="{% if language == 'tr' %}Ara...{% else %}Search...{% endif %}" value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="level">
+                        <option value="">{% if language == 'tr' %}Tüm Seviyeler{% else %}All Levels{% endif %}</option>
+                        {% for lv in levels %}
+                            <option value="{{ lv }}" {% if level == lv %}selected{% endif %}>{{ lv }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="category">
+                        <option value="">{% if language == 'tr' %}Tüm Kategoriler{% else %}All Categories{% endif %}</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="status">
+                        <option value="active" {% if status == 'active' %}selected{% endif %}>{% if language == 'tr' %}Aktif{% else %}Active{% endif %}</option>
+                        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>{% if language == 'tr' %}Pasif{% else %}Inactive{% endif %}</option>
+                        <option value="all" {% if status == 'all' %}selected{% endif %}>{% if language == 'tr' %}Tümü{% else %}All{% endif %}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>{% if language == 'tr' %}Filtrele{% else %}Filter{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Procedures List -->
+{% if procedures %}
+    <div class="row">
+        {% for procedure in procedures %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="procedure-code">{{ procedure.procedure_code }}</h5>
+                            <span class="badge badge-level {% if procedure.level == 'Basic' %}bg-success
+                                    {% elif procedure.level == 'Advanced' %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                {{ procedure.level }}
+                            </span>
+                        </div>
+
+                        <h6 class="card-title">
+                            {% if language == 'tr' %}{{ procedure.title_tr }}{% else %}{{ procedure.title_en }}{% endif %}
+                        </h6>
+
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-tag me-1"></i>{{ procedure.category }}
+                        </p>
+
+                        {% if procedure.estimated_duration %}
+                            <p class="card-text small">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ procedure.estimated_duration }} {% if language == 'tr' %}dakika{% else %}minutes{% endif %}
+                            </p>
+                        {% endif %}
+
+                        <p class="card-text small text-muted">
+                            {% if language == 'tr' %}{{ procedure.purpose_tr[:100] }}...{% else %}{{ procedure.purpose_en[:100] }}...{% endif %}
+                        </p>
+                    </div>
+
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('procedures.view', id=procedure.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>{% if language == 'tr' %}Görüntüle{% else %}View{% endif %}
+                            </a>
+                            <a href="{{ url_for('procedures.edit', id=procedure.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit me-1"></i>{% if language == 'tr' %}Düzenle{% else %}Edit{% endif %}
+                            </a>
+                            <a href="{{ url_for('results.create', procedure_id=procedure.id) }}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-plus me-1"></i>{% if language == 'tr' %}Test{% else %}Test{% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('procedures.index', page=pagination.prev_num, search=search, level=level, category=category, status=status) }}">
+                        {% if language == 'tr' %}Önceki{% else %}Previous{% endif %}
+                    </a>
+                </li>
+
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('procedures.index', page=page_num, search=search, level=level, category=category, status=status) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('procedures.index', page=pagination.next_num, search=search, level=level, category=category, status=status) }}">
+                        {% if language == 'tr' %}Sonraki{% else %}Next{% endif %}
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        {% if language == 'tr' %}Hiç prosedür bulunamadı. Yeni bir prosedür oluşturun!{% else %}No procedures found. Create a new one!{% endif %}
+    </div>
+{% endif %}
+{% endblock %}
