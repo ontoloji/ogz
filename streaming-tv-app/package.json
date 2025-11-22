@@ -1,0 +1,44 @@
+{
+  "name": "world-tv-streaming-app",
+  "version": "1.0.0",
+  "description": "Cross-platform streaming TV application for Windows and macOS with full-screen support and favorites",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build": "electron-builder --win --mac"
+  },
+  "keywords": [
+    "tv",
+    "streaming",
+    "electron",
+    "iptv"
+  ],
+  "author": "OGZ",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.ogz.worldtvstreaming",
+    "productName": "World TV Streaming",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.entertainment",
+      "icon": "assets/icon.icns"
+    }
+  }
+}

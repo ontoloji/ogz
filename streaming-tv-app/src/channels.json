@@ -1,0 +1,338 @@
+[
+  {
+    "id": "trt1",
+    "name": "TRT 1",
+    "country": "TR",
+    "category": "general",
+    "url": "https://tv-trt1.medya.trt.com.tr/master.m3u8",
+    "description": "TRT 1 - Türkiye Radyo Televizyon Kurumu ana kanalı"
+  },
+  {
+    "id": "trt-haber",
+    "name": "TRT Haber",
+    "country": "TR",
+    "category": "news",
+    "url": "https://tv-trthaber.medya.trt.com.tr/master.m3u8",
+    "description": "TRT Haber - 7/24 haber yayını"
+  },
+  {
+    "id": "trt-spor",
+    "name": "TRT Spor",
+    "country": "TR",
+    "category": "sports",
+    "url": "https://tv-trtspor1.medya.trt.com.tr/master.m3u8",
+    "description": "TRT Spor - Spor yayınları"
+  },
+  {
+    "id": "trt-cocuk",
+    "name": "TRT Çocuk",
+    "country": "TR",
+    "category": "kids",
+    "url": "https://tv-trtcocuk.medya.trt.com.tr/master.m3u8",
+    "description": "TRT Çocuk - Çocuk programları"
+  },
+  {
+    "id": "trt-belgesel",
+    "name": "TRT Belgesel",
+    "country": "TR",
+    "category": "documentary",
+    "url": "https://tv-trtbelgesel.medya.trt.com.tr/master.m3u8",
+    "description": "TRT Belgesel - Belgesel yayınları"
+  },
+  {
+    "id": "trt-muzik",
+    "name": "TRT Müzik",
+    "country": "TR",
+    "category": "music",
+    "url": "https://tv-trtmuzik.medya.trt.com.tr/master.m3u8",
+    "description": "TRT Müzik - Müzik yayınları"
+  },
+  {
+    "id": "trt-world",
+    "name": "TRT World",
+    "country": "TR",
+    "category": "news",
+    "url": "https://tv-trtworld.medya.trt.com.tr/master.m3u8",
+    "description": "TRT World - İngilizce uluslararası haber kanalı"
+  },
+  {
+    "id": "trt-arabi",
+    "name": "TRT Arabi",
+    "country": "TR",
+    "category": "news",
+    "url": "https://tv-trtarabi.medya.trt.com.tr/master.m3u8",
+    "description": "TRT Arabi - Arapça haber kanalı"
+  },
+  {
+    "id": "tbmm-tv",
+    "name": "TBMM TV",
+    "country": "TR",
+    "category": "general",
+    "url": "https://meclistv-live.ercdn.net/meclistv/meclistv.m3u8",
+    "description": "TBMM TV - Türkiye Büyük Millet Meclisi TV"
+  },
+  {
+    "id": "powertv",
+    "name": "PowerTV",
+    "country": "TR",
+    "category": "music",
+    "url": "https://livetv.powerapp.com.tr/powerTV/powerhd.smil/playlist.m3u8",
+    "description": "PowerTV - Türkçe müzik kanalı"
+  },
+  {
+    "id": "cnn-turk",
+    "name": "CNN Türk",
+    "country": "TR",
+    "category": "news",
+    "url": "https://live.duhnet.tv/S2/HLS_LIVE/cnnturknp/track_4_1250/playlist.m3u8",
+    "description": "CNN Türk - Türk haber kanalı"
+  },
+  {
+    "id": "al-jazeera",
+    "name": "Al Jazeera English",
+    "country": "AE",
+    "category": "news",
+    "url": "https://live-hls-web-aje.getaj.net/AJE/index.m3u8",
+    "description": "Al Jazeera English - Uluslararası haber kanalı"
+  },
+  {
+    "id": "al-jazeera-arabic",
+    "name": "Al Jazeera Arabic",
+    "country": "AE",
+    "category": "news",
+    "url": "https://live-hls-web-aja.getaj.net/AJA/index.m3u8",
+    "description": "Al Jazeera Arabic - Arapça haber kanalı"
+  },
+  {
+    "id": "france24-en",
+    "name": "France 24 English",
+    "country": "FR",
+    "category": "news",
+    "url": "https://cdn.klowdtv.net/803B48A/n1.klowdtv.net/live1/france24_720p/playlist.m3u8",
+    "description": "France 24 English - Fransız uluslararası haber kanalı"
+  },
+  {
+    "id": "france24-fr",
+    "name": "France 24 Français",
+    "country": "FR",
+    "category": "news",
+    "url": "https://cdn.klowdtv.net/803B48A/n1.klowdtv.net/live2/france24_720p/playlist.m3u8",
+    "description": "France 24 Français - Fransızca haber kanalı"
+  },
+  {
+    "id": "euronews",
+    "name": "Euronews",
+    "country": "FR",
+    "category": "news",
+    "url": "https://euronews-euronews-world-1-eu.rakuten.wstar.live/linear/1011000/playlist.m3u8",
+    "description": "Euronews - Avrupa haberleri"
+  },
+  {
+    "id": "dw-english",
+    "name": "DW English",
+    "country": "DE",
+    "category": "news",
+    "url": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8",
+    "description": "Deutsche Welle English - Alman uluslararası haber kanalı"
+  },
+  {
+    "id": "dw-deutsch",
+    "name": "DW Deutsch",
+    "country": "DE",
+    "category": "news",
+    "url": "https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8",
+    "description": "Deutsche Welle Deutsch - Almanca haber kanalı"
+  },
+  {
+    "id": "nasa-tv",
+    "name": "NASA TV",
+    "country": "US",
+    "category": "documentary",
+    "url": "https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8",
+    "description": "NASA TV - Uzay ve bilim yayınları"
+  },
+  {
+    "id": "nasa-tv-media",
+    "name": "NASA TV Media",
+    "country": "US",
+    "category": "documentary",
+    "url": "https://ntv2.akamaized.net/hls/live/2013923/NASA-NTV2-HLS/master.m3u8",
+    "description": "NASA TV Media - NASA medya kanalı"
+  },
+  {
+    "id": "red-bull-tv",
+    "name": "Red Bull TV",
+    "country": "US",
+    "category": "sports",
+    "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
+    "description": "Red Bull TV - Ekstrem sporlar ve macera"
+  },
+  {
+    "id": "rt-news",
+    "name": "RT News",
+    "country": "RU",
+    "category": "news",
+    "url": "https://rt-glb.rttv.com/live/rtnews/playlist.m3u8",
+    "description": "RT News - Rus uluslararası haber kanalı"
+  },
+  {
+    "id": "cgtn",
+    "name": "CGTN",
+    "country": "CN",
+    "category": "news",
+    "url": "https://live.cgtn.com/1000/prog_index.m3u8",
+    "description": "CGTN - Çin küresel televizyon ağı"
+  },
+  {
+    "id": "cgtn-documentary",
+    "name": "CGTN Documentary",
+    "country": "CN",
+    "category": "documentary",
+    "url": "https://livedoc.cgtn.com/1000d/prog_index.m3u8",
+    "description": "CGTN Documentary - Çin belgesel kanalı"
+  },
+  {
+    "id": "nhk-world",
+    "name": "NHK World Japan",
+    "country": "JP",
+    "category": "news",
+    "url": "https://nhkwlive-ojp.akamaized.net/hls/live/2003459/nhkwlive-ojp-en/index.m3u8",
+    "description": "NHK World Japan - Japon uluslararası yayın"
+  },
+  {
+    "id": "arirang",
+    "name": "Arirang TV",
+    "country": "KR",
+    "category": "general",
+    "url": "https://amdlive-ch01-ctnd-com.akamaized.net/arirang_1ch/smil:arirang_1ch.smil/playlist.m3u8",
+    "description": "Arirang TV - Güney Kore uluslararası kanalı"
+  },
+  {
+    "id": "fashion-tv",
+    "name": "Fashion TV",
+    "country": "FR",
+    "category": "entertainment",
+    "url": "https://fashiontv-fashiontv-5-nl.samsung.wurl.tv/playlist.m3u8",
+    "description": "Fashion TV - Moda ve lifestyle kanalı"
+  },
+  {
+    "id": "bloomberg-tv",
+    "name": "Bloomberg TV",
+    "country": "US",
+    "category": "news",
+    "url": "https://bloomberg-bloombergtv-1-gb.samsung.wurl.com/manifest/playlist.m3u8",
+    "description": "Bloomberg TV - İş ve finans haberleri"
+  },
+  {
+    "id": "cheddar-news",
+    "name": "Cheddar News",
+    "country": "US",
+    "category": "news",
+    "url": "https://cheddar-cheddar-1-eu.rakuten.wstar.live/linear/1003001/playlist.m3u8",
+    "description": "Cheddar News - İş ve teknoloji haberleri"
+  },
+  {
+    "id": "tastemade",
+    "name": "Tastemade",
+    "country": "US",
+    "category": "entertainment",
+    "url": "https://tastemade-freetv.samsung.wurl.com/manifest/playlist.m3u8",
+    "description": "Tastemade - Yemek ve seyahat programları"
+  },
+  {
+    "id": "pluto-tv-movies",
+    "name": "Pluto TV Movies",
+    "country": "US",
+    "category": "movies",
+    "url": "https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5812b7d3249444e05d09cc49/master.m3u8",
+    "description": "Pluto TV Movies - Film kanalı"
+  },
+  {
+    "id": "rakuten-comedy",
+    "name": "Rakuten Comedy",
+    "country": "US",
+    "category": "entertainment",
+    "url": "https://rakuten-comedy-1-eu.rakuten.wstar.live/linear/1010000/playlist.m3u8",
+    "description": "Rakuten Comedy - Komedi programları"
+  },
+  {
+    "id": "rakuten-action",
+    "name": "Rakuten Action",
+    "country": "US",
+    "category": "movies",
+    "url": "https://rakuten-actionmovies-1-eu.rakuten.wstar.live/linear/1006000/playlist.m3u8",
+    "description": "Rakuten Action - Aksiyon filmleri"
+  },
+  {
+    "id": "tv5monde",
+    "name": "TV5Monde",
+    "country": "FR",
+    "category": "general",
+    "url": "https://ott.tv5monde.com/Content/HLS/Live/channel(europe)/variant.m3u8",
+    "description": "TV5Monde - Fransızca uluslararası kanal"
+  },
+  {
+    "id": "rai-news",
+    "name": "RAI News 24",
+    "country": "IT",
+    "category": "news",
+    "url": "https://rainews1-live.akamaized.net/hls/live/598326/rainews1/rainews1/playlist.m3u8",
+    "description": "RAI News 24 - İtalyan haber kanalı"
+  },
+  {
+    "id": "kbs-world",
+    "name": "KBS World",
+    "country": "KR",
+    "category": "general",
+    "url": "https://kbsworld-ott.akamaized.net/hls/live/2002341/kbsworld/master.m3u8",
+    "description": "KBS World - Güney Kore kamu yayıncısı"
+  },
+  {
+    "id": "rtve",
+    "name": "RTVE 24h",
+    "country": "ES",
+    "category": "news",
+    "url": "https://rtvelivestream.akamaized.net/rtvesec/24h/24h_main_dvr.m3u8",
+    "description": "RTVE 24h - İspanyol haber kanalı"
+  },
+  {
+    "id": "rtp-internacional",
+    "name": "RTP Internacional",
+    "country": "FR",
+    "category": "general",
+    "url": "https://streaming-live.rtp.pt/liverepeater/smil:rtpi.smil/playlist.m3u8",
+    "description": "RTP Internacional - Portekiz uluslararası kanalı"
+  },
+  {
+    "id": "vevo-pop",
+    "name": "Vevo Pop",
+    "country": "US",
+    "category": "music",
+    "url": "https://5dcc6a54d90e8c00084b6e90-s-4.ssai.zype.com/5dcc6a54d90e8c00084b6e90-s-4/manifest.m3u8",
+    "description": "Vevo Pop - Pop müzik videoları"
+  },
+  {
+    "id": "vevo-hip-hop",
+    "name": "Vevo Hip Hop",
+    "country": "US",
+    "category": "music",
+    "url": "https://5dcc6aadcf49f600094842c5-s-3.ssai.zype.com/5dcc6aadcf49f600094842c5-s-3/manifest.m3u8",
+    "description": "Vevo Hip Hop - Hip hop müzik videoları"
+  },
+  {
+    "id": "mtv-biggest-pop",
+    "name": "MTV Biggest Pop",
+    "country": "US",
+    "category": "music",
+    "url": "https://cfd-v4-service-channel-stitcher-use1-1.prd.pluto.tv/stitch/hls/channel/5d14fd1a252d35decbc4080c/master.m3u8",
+    "description": "MTV Biggest Pop - Pop müzik ve klipler"
+  },
+  {
+    "id": "africa-news",
+    "name": "Africa News",
+    "country": "FR",
+    "category": "news",
+    "url": "https://rakuten-africanews-1-eu.rakuten.wstar.live/linear/1001000/playlist.m3u8",
+    "description": "Africa News - Afrika haberleri"
+  }
+]

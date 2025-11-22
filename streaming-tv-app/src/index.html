@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World TV Streaming</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>📺 World TV</h1>
+                <button class="toggle-sidebar" id="toggleSidebar">☰</button>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="tab-btn active" data-filter="all">Tüm Kanallar</button>
+                <button class="tab-btn" data-filter="favorites">⭐ Favoriler</button>
+            </div>
+
+            <!-- Search Box -->
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Kanal ara...">
+            </div>
+
+            <!-- Country Filter -->
+            <div class="country-filter">
+                <select id="countryFilter">
+                    <option value="all">Tüm Ülkeler</option>
+                    <option value="TR">🇹🇷 Türkiye</option>
+                    <option value="US">🇺🇸 ABD</option>
+                    <option value="GB">🇬🇧 İngiltere</option>
+                    <option value="DE">🇩🇪 Almanya</option>
+                    <option value="FR">🇫🇷 Fransa</option>
+                    <option value="IT">🇮🇹 İtalya</option>
+                    <option value="ES">🇪🇸 İspanya</option>
+                    <option value="RU">🇷🇺 Rusya</option>
+                    <option value="CN">🇨🇳 Çin</option>
+                    <option value="JP">🇯🇵 Japonya</option>
+                    <option value="KR">🇰🇷 Güney Kore</option>
+                    <option value="SA">🇸🇦 Suudi Arabistan</option>
+                    <option value="AE">🇦🇪 BAE</option>
+                </select>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="category-filter">
+                <select id="categoryFilter">
+                    <option value="all">Tüm Kategoriler</option>
+                    <option value="news">Haber</option>
+                    <option value="sports">Spor</option>
+                    <option value="entertainment">Eğlence</option>
+                    <option value="movies">Film</option>
+                    <option value="series">Dizi</option>
+                    <option value="documentary">Belgesel</option>
+                    <option value="kids">Çocuk</option>
+                    <option value="music">Müzik</option>
+                    <option value="general">Genel</option>
+                </select>
+            </div>
+
+            <!-- Channel List -->
+            <div class="channel-list" id="channelList">
+                <!-- Channels will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Video Player -->
+            <div class="video-container" id="videoContainer">
+                <video id="videoPlayer" controls>
+                    <source id="videoSource" src="" type="application/x-mpegURL">
+                    Tarayıcınız video oynatmayı desteklemiyor.
+                </video>
+
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+
+                <!-- No Channel Selected -->
+                <div class="no-channel" id="noChannel">
+                    <h2>📺 World TV Streaming</h2>
+                    <p>Bir kanal seçmek için sol menüden kanal listesine göz atın</p>
+                </div>
+
+                <!-- Video Controls Overlay -->
+                <div class="video-controls" id="videoControls">
+                    <div class="controls-top">
+                        <h3 id="currentChannelName">-</h3>
+                        <button class="favorite-btn" id="favoriteBtn" title="Favorilere Ekle/Çıkar">⭐</button>
+                    </div>
+                    <div class="controls-bottom">
+                        <button class="control-btn" id="playPauseBtn">▶️</button>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70">
+                        <span class="volume-label" id="volumeLabel">70%</span>
+                        <button class="control-btn fullscreen-btn" id="fullscreenBtn">⛶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Channel Info -->
+            <div class="channel-info" id="channelInfo">
+                <div class="info-header">
+                    <h2 id="infoChannelName">-</h2>
+                    <span class="info-badge" id="infoCountry">-</span>
+                    <span class="info-badge" id="infoCategory">-</span>
+                </div>
+                <p id="infoDescription">Kanal bilgisi burada görüntülenecek</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HLS.js Library for streaming support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>
