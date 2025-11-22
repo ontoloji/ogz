@@ -1,0 +1,107 @@
+# Compiled Object files
+*.o
+*.obj
+*.slo
+*.lo
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build directories
+obj/
+bin/
+build/
+debug/
+release/
+
+# Visual Studio files
+*.sdf
+*.opensdf
+*.suo
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.sbr
+*.scc
+*.VC.db
+*.VC.VC.opendb
+.vs/
+ipch/
+*.idb
+*.pdb
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# MinGW
+*.o
+*.a
+*.exe
+*.depend
+*.layout
+
+# Backup files
+*~
+*.swp
+*.swo
+*.orig
+*.bak
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# IDE specific files
+*.cbp
+*.workspace
+
+# CMake files (if you decide to use CMake later)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+
+# Packet capture files
+*.pcap
+*.pcapng
+*.cap
+
+# Npcap SDK (don't commit large SDK files)
+npcap-sdk*/
+WpdPack*/
