@@ -8,6 +8,7 @@ pyqtgraph>=0.13.0
 # CAN İletişimi (Kvaser - Windows only)
 # canlib - Kvaser CANlib SDK ile birlikte gelir, ayrı kurulum gerekir
 # https://www.kvaser.com/downloads-kvaser/
+# NOT: Kvaser Memorator 2xHS için Kvaser CANlib SDK gereklidir
 
 # Serial İletişim (Arduino)
 pyserial>=3.5
@@ -25,3 +26,31 @@ python-dateutil>=2.8.2
 
 # Grafik (opsiyonel - test için)
 matplotlib>=3.7.0  # PID test grafiği için
+
+# ============================================
+# CAN Bus Penetrasyon Test Araçları
+# ============================================
+
+# Güvenlik Test Araçları
+scapy>=2.5.0  # Paket manipülasyonu ve analiz (opsiyonel, gelişmiş kullanım için)
+
+# Veri Analizi ve İstatistik
+scipy>=1.10.0  # İstatistiksel analiz için
+
+# Kriptografi (UDS security testing için)
+cryptography>=41.0.0  # Seed-key algoritmaları için
+
+# JSON ve Veri Formatları
+ujson>=5.8.0  # Hızlı JSON işleme (opsiyonel)
+
+# NOT: Tüm penetrasyon test araçları Windows ortamında
+# Kvaser Memorator 2xHS ile test edilmiştir.
+#
+# Gerekli Donanım:
+# - Kvaser Memorator 2xHS (veya Memorator Pro 2xHS v2)
+# - CAN bus test ortamı
+#
+# Güvenlik Standartları:
+# - ISO 21434 (Otomotiv Siber Güvenlik)
+# - UN R155 (Siber Güvenlik Regülasyonu)
+# - ISO 14229 (UDS - Unified Diagnostic Services)
