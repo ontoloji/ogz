@@ -3,6 +3,7 @@
 
 # GUI
 PyQt6>=6.5.0
+PyQt6-WebEngine>=6.5.0  # Gizli tarayıcı için
 pyqtgraph>=0.13.0
 
 # CAN İletişimi (Kvaser - Windows only)
