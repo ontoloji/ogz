@@ -112,12 +112,12 @@ class MiniPlayer(QDialog):
         volume_label = QLabel("🔊")
         self.volume_slider = QSlider(Qt.Horizontal)
         self.volume_slider.setMinimum(0)
-        self.volume_slider.setMaximum(100)
-        self.volume_slider.setValue(70)
+        self.volume_slider.setMaximum(200)
+        self.volume_slider.setValue(100)
         self.volume_slider.valueChanged.connect(self.volume_changed.emit)
 
-        self.volume_value_label = QLabel("70%")
-        self.volume_value_label.setFixedWidth(35)
+        self.volume_value_label = QLabel("100%")
+        self.volume_value_label.setFixedWidth(40)
 
         volume_layout.addWidget(volume_label)
         volume_layout.addWidget(self.volume_slider)
@@ -238,17 +238,56 @@ class InternetRadioPlayer(QMainWindow):
         volume_group = QGroupBox("Ses Seviyesi")
         volume_layout = QVBoxLayout()
 
+        # Ana ses slider (0-200% - VLC amplification)
         self.volume_slider = QSlider(Qt.Horizontal)
         self.volume_slider.setMinimum(0)
-        self.volume_slider.setMaximum(100)
-        self.volume_slider.setValue(70)
+        self.volume_slider.setMaximum(200)
+        self.volume_slider.setValue(100)
+        self.volume_slider.setTickPosition(QSlider.TicksBelow)
+        self.volume_slider.setTickInterval(25)
         self.volume_slider.valueChanged.connect(self.change_volume)
 
-        self.volume_label = QLabel("70%")
+        self.volume_label = QLabel("100%")
         self.volume_label.setAlignment(Qt.AlignCenter)
+        self.volume_label.setFont(QFont("Arial", 11, QFont.Bold))
+
+        # Hızlı ses butonları
+        volume_buttons = QHBoxLayout()
+
+        vol_50_btn = QPushButton("50%")
+        vol_50_btn.clicked.connect(lambda: self.volume_slider.setValue(50))
+        vol_50_btn.setFixedWidth(50)
+
+        vol_100_btn = QPushButton("100%")
+        vol_100_btn.clicked.connect(lambda: self.volume_slider.setValue(100))
+        vol_100_btn.setFixedWidth(50)
+        vol_100_btn.setStyleSheet("background-color: #2196F3; color: white;")
+
+        vol_150_btn = QPushButton("150%")
+        vol_150_btn.clicked.connect(lambda: self.volume_slider.setValue(150))
+        vol_150_btn.setFixedWidth(50)
+        vol_150_btn.setStyleSheet("background-color: #FF9800; color: white;")
+
+        vol_200_btn = QPushButton("200%")
+        vol_200_btn.clicked.connect(lambda: self.volume_slider.setValue(200))
+        vol_200_btn.setFixedWidth(50)
+        vol_200_btn.setStyleSheet("background-color: #f44336; color: white;")
+
+        volume_buttons.addWidget(vol_50_btn)
+        volume_buttons.addWidget(vol_100_btn)
+        volume_buttons.addWidget(vol_150_btn)
+        volume_buttons.addWidget(vol_200_btn)
 
         volume_layout.addWidget(self.volume_slider)
         volume_layout.addWidget(self.volume_label)
+        volume_layout.addLayout(volume_buttons)
+
+        # Uyarı etiketi
+        warning_label = QLabel("⚠️ 100% üzeri hoparlöre zarar verebilir")
+        warning_label.setAlignment(Qt.AlignCenter)
+        warning_label.setStyleSheet("color: #FF9800; font-size: 9px;")
+        volume_layout.addWidget(warning_label)
+
         volume_group.setLayout(volume_layout)
         left_layout.addWidget(volume_group)
 
@@ -435,6 +474,14 @@ class InternetRadioPlayer(QMainWindow):
         """Ses seviyesini değiştir"""
         self.player.audio_set_volume(value)
         self.volume_label.setText(f"{value}%")
+
+        # Ses seviyesine göre renk değiştir
+        if value > 150:
+            self.volume_label.setStyleSheet("color: #f44336; font-weight: bold;")  # Kırmızı
+        elif value > 100:
+            self.volume_label.setStyleSheet("color: #FF9800; font-weight: bold;")  # Turuncu
+        else:
+            self.volume_label.setStyleSheet("color: #4CAF50; font-weight: bold;")  # Yeşil
 
     def change_eq_band(self, band, value):
         """Equalizer bandını değiştir"""
