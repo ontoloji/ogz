@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -48,13 +48,13 @@ jobs:
         copy radio_favorites_example.json release-folder\
 
     - name: Upload Portable EXE
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: InternetRadyoCalar-Portable
         path: release-portable/
 
     - name: Upload Folder Build
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: InternetRadyoCalar-Folder
         path: release-folder/
@@ -71,7 +71,7 @@ jobs:
         Compress-Archive -Path release-folder\* -DestinationPath InternetRadyoCalar-Folder-${{ steps.version.outputs.date }}.zip
 
     - name: Upload ZIP artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: InternetRadyoCalar-ZIPs
         path: |
