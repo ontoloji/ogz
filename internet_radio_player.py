@@ -12,10 +12,133 @@ import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QPushButton, QLineEdit, QLabel,
                              QSlider, QListWidget, QGroupBox, QMessageBox,
-                             QListWidgetItem, QInputDialog, QSplitter)
-from PyQt5.QtCore import Qt, QTimer
+                             QListWidgetItem, QInputDialog, QSplitter, QDialog)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon
 import vlc
+
+
+class MiniPlayer(QDialog):
+    """Mini player penceresi - küçük, her zaman üstte"""
+
+    # Sinyaller
+    play_clicked = pyqtSignal()
+    stop_clicked = pyqtSignal()
+    volume_changed = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Mini Player")
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setFixedSize(300, 120)
+
+        # Başlangıç pozisyonu (sağ üst köşe)
+        screen = QApplication.desktop().screenGeometry()
+        self.move(screen.width() - 320, 20)
+
+        self.init_ui()
+
+    def init_ui(self):
+        """Mini player arayüzü"""
+        layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        # Başlık ve kapat butonu
+        header_layout = QHBoxLayout()
+        title_label = QLabel("🎵 Radyo Çalar")
+        title_label.setFont(QFont("Arial", 10, QFont.Bold))
+
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(20, 20)
+        close_btn.clicked.connect(self.hide)
+        close_btn.setStyleSheet("background-color: #f44336; color: white; border: none; border-radius: 10px;")
+
+        header_layout.addWidget(title_label)
+        header_layout.addStretch()
+        header_layout.addWidget(close_btn)
+        layout.addLayout(header_layout)
+
+        # Durum etiketi
+        self.status_label = QLabel("Hazır")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("color: #2196F3; font-weight: bold;")
+        layout.addWidget(self.status_label)
+
+        # Kontrol butonları
+        controls_layout = QHBoxLayout()
+
+        self.play_btn = QPushButton("▶")
+        self.play_btn.setFixedSize(40, 40)
+        self.play_btn.clicked.connect(self.play_clicked.emit)
+        self.play_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                font-size: 18px;
+                border-radius: 20px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+
+        self.stop_btn = QPushButton("⏹")
+        self.stop_btn.setFixedSize(40, 40)
+        self.stop_btn.clicked.connect(self.stop_clicked.emit)
+        self.stop_btn.setEnabled(False)
+        self.stop_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                color: white;
+                font-size: 18px;
+                border-radius: 20px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #da190b;
+            }
+            QPushButton:disabled {
+                background-color: #cccccc;
+            }
+        """)
+
+        controls_layout.addWidget(self.play_btn)
+        controls_layout.addWidget(self.stop_btn)
+        layout.addLayout(controls_layout)
+
+        # Ses kontrolü
+        volume_layout = QHBoxLayout()
+        volume_label = QLabel("🔊")
+        self.volume_slider = QSlider(Qt.Horizontal)
+        self.volume_slider.setMinimum(0)
+        self.volume_slider.setMaximum(100)
+        self.volume_slider.setValue(70)
+        self.volume_slider.valueChanged.connect(self.volume_changed.emit)
+
+        self.volume_value_label = QLabel("70%")
+        self.volume_value_label.setFixedWidth(35)
+
+        volume_layout.addWidget(volume_label)
+        volume_layout.addWidget(self.volume_slider)
+        volume_layout.addWidget(self.volume_value_label)
+        layout.addLayout(volume_layout)
+
+        self.setLayout(layout)
+
+    def update_status(self, status, color="#2196F3"):
+        """Durum metnini güncelle"""
+        self.status_label.setText(status)
+        self.status_label.setStyleSheet(f"color: {color}; font-weight: bold;")
+
+    def update_volume_label(self, value):
+        """Ses seviyesi etiketini güncelle"""
+        self.volume_value_label.setText(f"{value}%")
+
+    def set_playing_state(self, playing):
+        """Çalma durumuna göre butonları güncelle"""
+        self.play_btn.setEnabled(not playing)
+        self.stop_btn.setEnabled(playing)
 
 class InternetRadioPlayer(QMainWindow):
     """Ana radyo çalar sınıfı"""
@@ -44,8 +167,14 @@ class InternetRadioPlayer(QMainWindow):
         self.eq_bands = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000]
         self.eq_sliders = []
 
+        # Mini player
+        self.mini_player = None
+
         # Arayüzü oluştur
         self.init_ui()
+
+        # Mini player'ı oluştur
+        self.create_mini_player()
 
         # Favorileri yükle
         self.load_favorites()
@@ -135,6 +264,12 @@ class InternetRadioPlayer(QMainWindow):
         status_layout.addWidget(self.status_label)
         status_group.setLayout(status_layout)
         left_layout.addWidget(status_group)
+
+        # Mini Player butonu
+        mini_player_btn = QPushButton("📱 Mini Player Aç")
+        mini_player_btn.clicked.connect(self.toggle_mini_player)
+        mini_player_btn.setStyleSheet("background-color: #9C27B0; color: white; font-size: 12px; padding: 8px;")
+        left_layout.addWidget(mini_player_btn)
 
         # Equalizer
         eq_group = QGroupBox("Equalizer (dB)")
@@ -263,10 +398,20 @@ class InternetRadioPlayer(QMainWindow):
             self.status_label.setStyleSheet("color: #4CAF50; padding: 10px; font-weight: bold;")
             self.statusBar().showMessage(f"Çalıyor: {url}")
 
+            # Mini player'ı güncelle
+            if self.mini_player:
+                self.mini_player.set_playing_state(True)
+                self.mini_player.update_status("▶ Çalıyor", "#4CAF50")
+
         except Exception as e:
             QMessageBox.critical(self, "Hata", f"Radyo çalınamadı:\n{str(e)}")
             self.status_label.setText("Hata!")
             self.status_label.setStyleSheet("color: #f44336; padding: 10px;")
+
+            # Mini player'ı güncelle
+            if self.mini_player:
+                self.mini_player.set_playing_state(False)
+                self.mini_player.update_status("Hata!", "#f44336")
 
     def stop_radio(self):
         """Radyoyu durdur"""
@@ -280,6 +425,11 @@ class InternetRadioPlayer(QMainWindow):
             self.status_label.setText("Durduruldu")
             self.status_label.setStyleSheet("color: #FF9800; padding: 10px;")
             self.statusBar().showMessage("Radyo durduruldu")
+
+            # Mini player'ı güncelle
+            if self.mini_player:
+                self.mini_player.set_playing_state(False)
+                self.mini_player.update_status("Durduruldu", "#FF9800")
 
     def change_volume(self, value):
         """Ses seviyesini değiştir"""
@@ -414,10 +564,56 @@ class InternetRadioPlayer(QMainWindow):
                 self.play_btn.setEnabled(True)
                 self.stop_btn.setEnabled(False)
 
+    def create_mini_player(self):
+        """Mini player'ı oluştur ve bağlantıları kur"""
+        self.mini_player = MiniPlayer(self)
+
+        # Mini player sinyallerini ana player'a bağla
+        self.mini_player.play_clicked.connect(self.play_radio)
+        self.mini_player.stop_clicked.connect(self.stop_radio)
+        self.mini_player.volume_changed.connect(self.sync_volume_from_mini)
+
+    def toggle_mini_player(self):
+        """Mini player'ı aç/kapat"""
+        if self.mini_player.isVisible():
+            self.mini_player.hide()
+        else:
+            self.mini_player.show()
+            # Mevcut durumu senkronize et
+            self.sync_mini_player_state()
+
+    def sync_mini_player_state(self):
+        """Ana player durumunu mini player'a senkronize et"""
+        if self.mini_player:
+            # Ses seviyesi
+            volume = self.volume_slider.value()
+            self.mini_player.volume_slider.setValue(volume)
+            self.mini_player.update_volume_label(volume)
+
+            # Çalma durumu
+            self.mini_player.set_playing_state(self.is_playing)
+
+            # Durum metni
+            if self.is_playing:
+                self.mini_player.update_status("▶ Çalıyor", "#4CAF50")
+            else:
+                self.mini_player.update_status("Hazır", "#2196F3")
+
+    def sync_volume_from_mini(self, value):
+        """Mini player'dan gelen ses değişikliğini ana player'a uygula"""
+        self.volume_slider.setValue(value)
+        self.change_volume(value)
+        self.mini_player.update_volume_label(value)
+
     def closeEvent(self, event):
         """Pencere kapatılırken temizlik yap"""
         if self.is_playing:
             self.player.stop()
+
+        # Mini player'ı kapat
+        if self.mini_player:
+            self.mini_player.close()
+
         event.accept()
 
 
