@@ -30,8 +30,9 @@ class InternetRadioPlayer(QMainWindow):
         self.player = self.vlc_instance.media_player_new()
 
         # Equalizer
-        self.equalizer = vlc.AudioEqualizer()
-        self.player.set_equalizer(self.equalizer)
+        self.equalizer = None
+        self.eq_preamp = 0.0
+        self.eq_values = [0.0] * 10  # 10 bant değerlerini sakla
 
         # Durum değişkenleri
         self.is_playing = False
@@ -249,6 +250,9 @@ class InternetRadioPlayer(QMainWindow):
             # Play
             self.player.play()
 
+            # Equalizer'ı yeniden ayarla (her yeni media için gerekli)
+            self.apply_equalizer()
+
             self.current_url = url
             self.is_playing = True
 
@@ -284,20 +288,45 @@ class InternetRadioPlayer(QMainWindow):
 
     def change_eq_band(self, band, value):
         """Equalizer bandını değiştir"""
-        # VLC equalizer değeri -20 ile +20 arasında (dB cinsinden)
-        self.equalizer.set_amp_at_index(float(value), band)
+        # Değeri sakla
+        self.eq_values[band] = float(value)
 
         # Update value label
         if self.eq_sliders[band].value_label:
             self.eq_sliders[band].value_label.setText(f"{value}")
 
+        # Equalizer'ı güncelle
+        self.apply_equalizer()
+
     def reset_equalizer(self):
         """Equalizeri sıfırla"""
+        # Değerleri sıfırla
+        self.eq_values = [0.0] * 10
+
+        # Slider'ları sıfırla
         for i, slider in enumerate(self.eq_sliders):
             slider.setValue(0)
             if hasattr(slider, 'value_label'):
                 slider.value_label.setText("0")
-            self.equalizer.set_amp_at_index(0.0, i)
+
+        # Equalizer'ı güncelle
+        self.apply_equalizer()
+
+    def apply_equalizer(self):
+        """Equalizer ayarlarını player'a uygula"""
+        try:
+            # Yeni equalizer oluştur
+            self.equalizer = vlc.AudioEqualizer()
+
+            # Tüm bant değerlerini ayarla
+            for i, value in enumerate(self.eq_values):
+                self.equalizer.set_amp_at_index(value, i)
+
+            # Player'a bağla
+            self.player.set_equalizer(self.equalizer)
+
+        except Exception as e:
+            print(f"Equalizer hatası: {e}")
 
     def add_favorite(self):
         """Favori ekle"""
