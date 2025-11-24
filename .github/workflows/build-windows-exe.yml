@@ -1,0 +1,78 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ claude/internet-radio-player-* ]
+  workflow_dispatch:  # Manuel tetikleme
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install PyQt5>=5.15.0
+        pip install python-vlc>=3.0.0
+
+    - name: Build single-file EXE
+      run: |
+        pyinstaller --clean internet_radio_player.spec
+
+    - name: Build folder EXE
+      run: |
+        pyinstaller --clean internet_radio_player_folder.spec
+
+    - name: Create release package (Portable)
+      run: |
+        mkdir release-portable
+        copy dist\InternetRadyoCalar.exe release-portable\
+        copy RADIO_README.md release-portable\
+        copy radio_favorites_example.json release-portable\
+
+    - name: Create release package (Folder)
+      run: |
+        mkdir release-folder
+        xcopy /E /I dist\InternetRadyoCalar release-folder\InternetRadyoCalar
+        copy RADIO_README.md release-folder\
+        copy radio_favorites_example.json release-folder\
+
+    - name: Upload Portable EXE
+      uses: actions/upload-artifact@v3
+      with:
+        name: InternetRadyoCalar-Portable
+        path: release-portable/
+
+    - name: Upload Folder Build
+      uses: actions/upload-artifact@v3
+      with:
+        name: InternetRadyoCalar-Folder
+        path: release-folder/
+
+    - name: Get version info
+      id: version
+      run: |
+        echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Create ZIP archives
+      run: |
+        Compress-Archive -Path release-portable\* -DestinationPath InternetRadyoCalar-Portable-${{ steps.version.outputs.date }}.zip
+        Compress-Archive -Path release-folder\* -DestinationPath InternetRadyoCalar-Folder-${{ steps.version.outputs.date }}.zip
+
+    - name: Upload ZIP artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: InternetRadyoCalar-ZIPs
+        path: |
+          *.zip

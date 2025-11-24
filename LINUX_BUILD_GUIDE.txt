@@ -1,0 +1,89 @@
+#!/bin/bash
+# Linux'ta Windows EXE Build Rehberi
+# Bu script Windows VM kurulumunu açıklar
+
+cat << 'EOF'
+╔════════════════════════════════════════════════════════════╗
+║  Windows EXE Oluşturma Rehberi (Kali Linux'tan)          ║
+╚════════════════════════════════════════════════════════════╝
+
+SORUN: PyInstaller ile cross-platform build yapılamaz!
+       Linux → Windows EXE mümkün değil ❌
+
+ÇÖZÜMLER:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 ÇÖZÜM 1: Windows VM Kullanın (Kali'de)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. VirtualBox veya VMware yükleyin:
+   $ sudo apt update
+   $ sudo apt install virtualbox
+
+2. Windows 10/11 ISO indirin:
+   https://www.microsoft.com/software-download/windows10
+
+3. VM oluşturun:
+   - 4 GB RAM
+   - 50 GB Disk
+   - Windows'u yükleyin
+
+4. Windows'ta Python yükleyin:
+   https://www.python.org/downloads/
+   (Python 3.11 önerilir)
+
+5. Paylaşılan klasör ayarlayın:
+   VirtualBox → Settings → Shared Folders
+   Kali klasörünü Windows'a bağlayın
+
+6. Windows VM'de:
+   cd Z:\ogz-radio  (paylaşılan klasör)
+   pip install pyinstaller PyQt5 python-vlc
+   build_exe.bat
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 ÇÖZÜM 2: GitHub Actions (Ücretsiz, Otomatik)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GitHub'da otomatik Windows build:
+
+1. Projeyi GitHub'a push edin (zaten yapıldı ✓)
+
+2. .github/workflows/build.yml oluşturun (aşağıda)
+
+3. GitHub otomatik build yapar
+
+4. Releases'tan EXE'yi indirin
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 ÇÖZÜM 3: Wine Kullanın (Deneysel, Karmaşık)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Wine ile Windows Python çalıştırma:
+- Karmaşık kurulum
+- Hata olasılığı yüksek
+- ÖNERİLMEZ ❌
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 ÇÖZÜM 4: Windows Bilgisayar Kullanın (En Kolay)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Eğer Windows bilgisayarınız varsa:
+
+1. Projeyi USB veya Git ile taşıyın
+2. Windows'ta build_exe.bat çalıştırın
+3. Bitti! ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 HİZMET: Python 3 ile Linux'ta Çalıştırma
+
+Şimdilik Windows'suz test etmek için:
+
+  # Python 3 kullanın
+  python3 internet_radio_player.py
+
+  # Eğer PyQt5 eksikse:
+  pip3 install PyQt5 python-vlc
+
+EOF
