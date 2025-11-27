@@ -156,10 +156,12 @@ class InternetRadioPlayer(QMainWindow):
         self.equalizer = None
         self.eq_preamp = 0.0
         self.eq_values = [0.0] * 10  # 10 bant değerlerini sakla
+        self.eq_settings_file = "radio_equalizer.json"
 
         # Durum değişkenleri
         self.is_playing = False
         self.current_url = ""
+        self.current_title = ""  # Çalan şarkı adı
         self.favorites = []
         self.favorites_file = "radio_favorites.json"
 
@@ -178,6 +180,13 @@ class InternetRadioPlayer(QMainWindow):
 
         # Favorileri yükle
         self.load_favorites()
+
+        # Equalizer ayarlarını yükle
+        self.load_equalizer_settings()
+
+        # Ses seviyesini başlangıçta 100% ile sınırla
+        if self.volume_slider.value() > 100:
+            self.volume_slider.setValue(100)
 
         # Timer for updating current track info
         self.update_timer = QTimer()
@@ -300,7 +309,15 @@ class InternetRadioPlayer(QMainWindow):
         self.status_label.setFont(QFont("Arial", 11))
         self.status_label.setStyleSheet("color: #2196F3; padding: 10px;")
 
+        # Şarkı adı etiketi
+        self.now_playing_label = QLabel("♪ ...")
+        self.now_playing_label.setAlignment(Qt.AlignCenter)
+        self.now_playing_label.setFont(QFont("Arial", 10, QFont.Bold))
+        self.now_playing_label.setStyleSheet("color: #9C27B0; padding: 5px; background-color: #f0f0f0; border-radius: 5px;")
+        self.now_playing_label.setWordWrap(True)
+
         status_layout.addWidget(self.status_label)
+        status_layout.addWidget(self.now_playing_label)
         status_group.setLayout(status_layout)
         left_layout.addWidget(status_group)
 
@@ -495,6 +512,9 @@ class InternetRadioPlayer(QMainWindow):
         # Equalizer'ı güncelle
         self.apply_equalizer()
 
+        # Ayarları kaydet
+        self.save_equalizer_settings()
+
     def reset_equalizer(self):
         """Equalizeri sıfırla"""
         # Değerleri sıfırla
@@ -508,6 +528,9 @@ class InternetRadioPlayer(QMainWindow):
 
         # Equalizer'ı güncelle
         self.apply_equalizer()
+
+        # Ayarları kaydet
+        self.save_equalizer_settings()
 
     def apply_equalizer(self):
         """Equalizer ayarlarını player'a uygula"""
@@ -590,6 +613,36 @@ class InternetRadioPlayer(QMainWindow):
         except Exception as e:
             print(f"Favoriler kaydedilemedi: {e}")
 
+    def load_equalizer_settings(self):
+        """Equalizer ayarlarını dosyadan yükle"""
+        if os.path.exists(self.eq_settings_file):
+            try:
+                with open(self.eq_settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                    self.eq_values = settings.get('eq_values', [0.0] * 10)
+
+                    # Slider'ları güncelle
+                    for i, value in enumerate(self.eq_values):
+                        if i < len(self.eq_sliders):
+                            self.eq_sliders[i].setValue(int(value))
+
+                    # Equalizer'ı uygula
+                    self.apply_equalizer()
+
+            except Exception as e:
+                print(f"Equalizer ayarları yüklenemedi: {e}")
+
+    def save_equalizer_settings(self):
+        """Equalizer ayarlarını dosyaya kaydet"""
+        try:
+            settings = {
+                'eq_values': self.eq_values
+            }
+            with open(self.eq_settings_file, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, indent=2)
+        except Exception as e:
+            print(f"Equalizer ayarları kaydedilemedi: {e}")
+
     def update_favorites_list(self):
         """Favori listesini güncelle"""
         self.favorites_list.clear()
@@ -602,6 +655,10 @@ class InternetRadioPlayer(QMainWindow):
             state = self.player.get_state()
             if state == vlc.State.Playing:
                 self.status_label.setText(f"▶ Çalıyor")
+
+                # Şarkı adını al (metadata)
+                self.update_now_playing()
+
             elif state == vlc.State.Buffering:
                 self.status_label.setText("⏳ Yükleniyor...")
             elif state == vlc.State.Error:
@@ -610,6 +667,44 @@ class InternetRadioPlayer(QMainWindow):
                 self.is_playing = False
                 self.play_btn.setEnabled(True)
                 self.stop_btn.setEnabled(False)
+                self.now_playing_label.setText("♪ ...")
+
+    def update_now_playing(self):
+        """Çalan şarkı bilgisini güncelle"""
+        try:
+            media = self.player.get_media()
+            if media:
+                # Metadata'yı parse et
+                media.parse()
+
+                # Şarkı adını al
+                title = media.get_meta(vlc.Meta.Title)
+                artist = media.get_meta(vlc.Meta.Artist)
+                now_playing = media.get_meta(vlc.Meta.NowPlaying)
+
+                # En uygun metni seç
+                display_text = None
+                if now_playing:
+                    display_text = now_playing
+                elif title and artist:
+                    display_text = f"{artist} - {title}"
+                elif title:
+                    display_text = title
+
+                # Eğer yeni bilgi varsa güncelle
+                if display_text and display_text != self.current_title:
+                    self.current_title = display_text
+                    self.now_playing_label.setText(f"♪ {display_text}")
+
+                    # Mini player'ı da güncelle
+                    if self.mini_player and self.mini_player.isVisible():
+                        # İlk 30 karakteri göster (mini player küçük)
+                        short_text = display_text[:30] + "..." if len(display_text) > 30 else display_text
+                        self.mini_player.update_status(f"♪ {short_text}", "#9C27B0")
+
+        except Exception as e:
+            # Metadata okuma hatası - sessizce devam et
+            pass
 
     def create_mini_player(self):
         """Mini player'ı oluştur ve bağlantıları kur"""
