@@ -162,6 +162,7 @@ class InternetRadioPlayer(QMainWindow):
         self.is_playing = False
         self.current_url = ""
         self.current_title = ""  # Çalan şarkı adı
+        self.metadata_update_counter = 0  # Metadata güncelleme sayacı
         self.favorites = []
         self.favorites_file = "radio_favorites.json"
 
@@ -656,8 +657,11 @@ class InternetRadioPlayer(QMainWindow):
             if state == vlc.State.Playing:
                 self.status_label.setText(f"▶ Çalıyor")
 
-                # Şarkı adını al (metadata)
-                self.update_now_playing()
+                # Şarkı adını al (metadata) - Her 3 saniyede bir
+                self.metadata_update_counter += 1
+                if self.metadata_update_counter >= 3:  # 3 saniye (timer 1 saniyede bir)
+                    self.metadata_update_counter = 0
+                    self.update_now_playing()
 
             elif state == vlc.State.Buffering:
                 self.status_label.setText("⏳ Yükleniyor...")
@@ -673,34 +677,36 @@ class InternetRadioPlayer(QMainWindow):
         """Çalan şarkı bilgisini güncelle"""
         try:
             media = self.player.get_media()
-            if media:
-                # Metadata'yı parse et
-                media.parse()
+            if not media:
+                return
 
-                # Şarkı adını al
-                title = media.get_meta(vlc.Meta.Title)
-                artist = media.get_meta(vlc.Meta.Artist)
-                now_playing = media.get_meta(vlc.Meta.NowPlaying)
+            # Parse ETME - GUI donmasına sebep oluyor!
+            # VLC zaten arka planda parse ediyor, direkt meta okuyabiliriz
 
-                # En uygun metni seç
-                display_text = None
-                if now_playing:
-                    display_text = now_playing
-                elif title and artist:
-                    display_text = f"{artist} - {title}"
-                elif title:
-                    display_text = title
+            # Şarkı adını al (non-blocking)
+            title = media.get_meta(vlc.Meta.Title)
+            artist = media.get_meta(vlc.Meta.Artist)
+            now_playing = media.get_meta(vlc.Meta.NowPlaying)
 
-                # Eğer yeni bilgi varsa güncelle
-                if display_text and display_text != self.current_title:
-                    self.current_title = display_text
-                    self.now_playing_label.setText(f"♪ {display_text}")
+            # En uygun metni seç
+            display_text = None
+            if now_playing:
+                display_text = now_playing
+            elif title and artist:
+                display_text = f"{artist} - {title}"
+            elif title:
+                display_text = title
 
-                    # Mini player'ı da güncelle
-                    if self.mini_player and self.mini_player.isVisible():
-                        # İlk 30 karakteri göster (mini player küçük)
-                        short_text = display_text[:30] + "..." if len(display_text) > 30 else display_text
-                        self.mini_player.update_status(f"♪ {short_text}", "#9C27B0")
+            # Eğer yeni bilgi varsa güncelle
+            if display_text and display_text != self.current_title:
+                self.current_title = display_text
+                self.now_playing_label.setText(f"♪ {display_text}")
+
+                # Mini player'ı da güncelle
+                if self.mini_player and self.mini_player.isVisible():
+                    # İlk 30 karakteri göster (mini player küçük)
+                    short_text = display_text[:30] + "..." if len(display_text) > 30 else display_text
+                    self.mini_player.update_status(f"♪ {short_text}", "#9C27B0")
 
         except Exception as e:
             # Metadata okuma hatası - sessizce devam et
