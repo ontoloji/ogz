@@ -38,6 +38,19 @@ C:\WeatherLogs\
     └── Sakarya_Kaynarca\
 ```
 
+## 🚀 Hızlı Başlangıç: GitHub'dan Hazır EXE İndirme
+
+**Kendi bilgisayarınızda .NET SDK kurmak istemiyorsanız:**
+
+1. GitHub'da **Actions** sekmesine gidin
+2. **"Build Weather Logging Service"** workflow'unu seçin
+3. **"Run workflow"** ile build başlatın (veya en son tamamlanmış build'i bulun)
+4. Build tamamlandığında **Artifacts** bölümünden ZIP dosyasını indirin
+5. ZIP'i çıkartın, `appsettings.json`'a API anahtarınızı ekleyin
+6. `install.bat` ile kurun
+
+**Detaylı bilgi için:** [GITHUB_BUILD.md](GITHUB_BUILD.md) dosyasına bakın.
+
 ## Kurulum
 
 ### Gereksinimler

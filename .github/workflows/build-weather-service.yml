@@ -1,0 +1,153 @@
+name: Build Weather Logging Service
+
+on:
+  push:
+    branches: [ main, master, 'claude/**' ]
+    paths:
+      - 'WeatherLoggingService/**'
+      - '.github/workflows/build-weather-service.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'WeatherLoggingService/**'
+  workflow_dispatch:  # Manuel çalıştırma
+
+jobs:
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore WeatherLoggingService/WeatherLoggingService.csproj
+
+    - name: Build
+      run: dotnet build WeatherLoggingService/WeatherLoggingService.csproj --configuration Release --no-restore
+
+    - name: Publish Windows x64 (Self-Contained)
+      run: |
+        dotnet publish WeatherLoggingService/WeatherLoggingService.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:EnableCompressionInSingleFile=true `
+          -o publish/win-x64
+
+    - name: Publish Windows x64 (Framework-Dependent)
+      run: |
+        dotnet publish WeatherLoggingService/WeatherLoggingService.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained false `
+          -p:PublishSingleFile=true `
+          -o publish/win-x64-framework-dependent
+
+    - name: Copy installation files
+      run: |
+        Copy-Item WeatherLoggingService/install.bat publish/win-x64/
+        Copy-Item WeatherLoggingService/uninstall.bat publish/win-x64/
+        Copy-Item WeatherLoggingService/README.md publish/win-x64/
+        Copy-Item WeatherLoggingService/KURULUM.md publish/win-x64/
+        Copy-Item WeatherLoggingService/install.bat publish/win-x64-framework-dependent/
+        Copy-Item WeatherLoggingService/uninstall.bat publish/win-x64-framework-dependent/
+
+    - name: Create version file
+      run: |
+        $version = Get-Date -Format "yyyy.MM.dd.HHmm"
+        $commit = "${{ github.sha }}".Substring(0, 7)
+        @"
+        Weather Logging Service
+        Version: $version
+        Commit: $commit
+        Build Date: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+        Branch: ${{ github.ref_name }}
+        "@ | Out-File -FilePath publish/win-x64/VERSION.txt -Encoding UTF8
+        Copy-Item publish/win-x64/VERSION.txt publish/win-x64-framework-dependent/
+
+    - name: Create ZIP archives
+      run: |
+        Compress-Archive -Path publish/win-x64/* -DestinationPath WeatherLoggingService-win-x64-standalone.zip
+        Compress-Archive -Path publish/win-x64-framework-dependent/* -DestinationPath WeatherLoggingService-win-x64-framework.zip
+
+    - name: Upload Self-Contained Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: WeatherLoggingService-win-x64-standalone
+        path: WeatherLoggingService-win-x64-standalone.zip
+        retention-days: 30
+
+    - name: Upload Framework-Dependent Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: WeatherLoggingService-win-x64-framework
+        path: WeatherLoggingService-win-x64-framework.zip
+        retention-days: 30
+
+    - name: Display artifact info
+      run: |
+        Write-Host "========================================" -ForegroundColor Green
+        Write-Host "Build Başarılı!" -ForegroundColor Green
+        Write-Host "========================================" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Artifacts hazır:" -ForegroundColor Yellow
+        Write-Host "  1. WeatherLoggingService-win-x64-standalone.zip (Self-contained, ~70MB)"
+        Write-Host "  2. WeatherLoggingService-win-x64-framework.zip (Framework-dependent, ~1MB)"
+        Write-Host ""
+        Write-Host "İndirme: Actions -> Build -> Artifacts" -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Green
+
+  create-release:
+    name: Create Release (on tag)
+    runs-on: windows-latest
+    needs: build-windows
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          WeatherLoggingService-win-x64-standalone/*.zip
+          WeatherLoggingService-win-x64-framework/*.zip
+        body: |
+          ## Hava Durumu Loglama Servisi ${{ github.ref_name }}
+
+          ### İndirme Seçenekleri
+
+          **Self-Contained (Önerilen)**
+          - `WeatherLoggingService-win-x64-standalone.zip` (~70MB)
+          - .NET runtime gerekmez
+          - Çalıştırmak için hazır
+
+          **Framework-Dependent (Küçük boyut)**
+          - `WeatherLoggingService-win-x64-framework.zip` (~1MB)
+          - .NET 8.0 Runtime gerektirir
+          - Daha küçük dosya boyutu
+
+          ### Kurulum
+
+          1. ZIP dosyasını indirin ve çıkartın
+          2. `appsettings.json` dosyasına API anahtarınızı ekleyin
+          3. Yönetici olarak `install.bat` çalıştırın
+
+          Detaylı bilgi için `KURULUM.md` dosyasına bakın.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
