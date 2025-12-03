@@ -1,0 +1,94 @@
+═══════════════════════════════════════════════════════════
+  SES DOSYALARI KONTROL LİSTESİ - 30 DOSYA
+═══════════════════════════════════════════════════════════
+
+Konum: sounds/ klasörü
+Format: MP3, OGG veya WAV
+Süre: 30-60 saniye loop önerilen
+
+
+🌿 DOĞA SESLERİ (10 dosya)
+───────────────────────────────────────────────────────────
+[ ] rain.mp3             - Yağmur
+[ ] thunder.mp3          - Gök gürültüsü
+[ ] wind.mp3             - Rüzgar
+[ ] ocean.mp3            - Okyanus dalgaları
+[ ] river.mp3            - Nehir
+[ ] waterfall.mp3        - Şelale
+[ ] forest.mp3           - Orman
+[ ] birds.mp3            - Kuş sesleri
+[ ] crickets.mp3         - Cırcır böceği
+[ ] fire.mp3             - Ateş
+
+
+🎧 AMBIENT SESLERİ (10 dosya)
+───────────────────────────────────────────────────────────
+[ ] white_noise.mp3      - Beyaz gürültü
+[ ] brown_noise.mp3      - Kahverengi gürültü
+[ ] pink_noise.mp3       - Pembe gürültü
+[ ] fan.mp3              - Vantilatör
+[ ] clock.mp3            - Saat tik tak
+[ ] wind_chimes.mp3      - Rüzgar çanları
+[ ] coffee_shop.mp3      - Kafe ambiyansı
+[ ] library.mp3          - Kütüphane
+[ ] train.mp3            - Tren
+[ ] airplane.mp3         - Uçak
+
+
+😌 RAHATLAMA SESLERİ (10 dosya)
+───────────────────────────────────────────────────────────
+[ ] night.mp3            - Gece sesleri
+[ ] campfire.mp3         - Kamp ateşi
+[ ] cat_purr.mp3         - Kedi mırıltısı
+[ ] fireplace.mp3        - Şömine
+[ ] shower.mp3           - Duş
+[ ] fountain.mp3         - Çeşme
+[ ] frogs.mp3            - Kurbağalar
+[ ] seagulls.mp3         - Martılar
+[ ] beach.mp3            - Sahil dalgaları
+[ ] underwater.mp3       - Su altı
+
+
+═══════════════════════════════════════════════════════════
+  İNDİRME KAYNAKLARI
+═══════════════════════════════════════════════════════════
+
+1. Freesound.org (Ücretsiz, CC0 lisanslı)
+   https://freesound.org/
+
+2. BBC Sound Effects (Ücretsiz)
+   https://sound-effects.bbcrewind.co.uk/
+
+3. Zapsplat (Ücretsiz, kayıt gerekli)
+   https://www.zapsplat.com/
+
+4. YouTube + yt-dlp
+   pip install yt-dlp
+   yt-dlp -x --audio-format mp3 "URL" -o "sounds/rain.mp3"
+
+
+═══════════════════════════════════════════════════════════
+  HIZLI TEST
+═══════════════════════════════════════════════════════════
+
+Önce 5 ses ile test et:
+✓ rain.mp3
+✓ ocean.mp3
+✓ white_noise.mp3
+✓ fire.mp3
+✓ birds.mp3
+
+Çalışırsa devam et!
+
+
+═══════════════════════════════════════════════════════════
+  KONTROL
+═══════════════════════════════════════════════════════════
+
+Dosya sayısı kontrolü:
+  Windows: dir sounds\*.mp3 /b | find /c ".mp3"
+  Linux:   ls sounds/*.mp3 | wc -l
+
+Hedef: 30 dosya
+
+Program çalıştır ve "🎵 Noise" butonuna tıkla!
