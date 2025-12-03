@@ -14,8 +14,97 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QSlider, QListWidget, QGroupBox, QMessageBox,
                              QListWidgetItem, QInputDialog, QSplitter, QDialog)
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QPainter, QColor, QPen
 import vlc
+import urllib.request
+import urllib.parse
+
+
+def create_app_icon():
+    """Kırmızı daire içinde beyaz RPo ikonu oluştur"""
+    icon = QIcon()
+
+    for size in [256, 128, 64, 48, 32, 16]:
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.transparent)
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Kırmızı daire
+        painter.setPen(QPen(QColor("#C62828"), max(2, size // 32)))
+        painter.setBrush(QColor("#E53935"))
+        margin = 2
+        painter.drawEllipse(margin, margin, size - margin*2, size - margin*2)
+
+        # Beyaz "RPo" yazısı
+        painter.setPen(QColor("white"))
+        font = QFont("Arial", int(size * 0.3), QFont.Bold)
+        painter.setFont(font)
+        painter.drawText(pixmap.rect(), Qt.AlignCenter, "RPo")
+
+        painter.end()
+        icon.addPixmap(pixmap)
+
+    return icon
+
+
+def parse_playlist_url(url):
+    """
+    PLS, M3U, ASX gibi playlist dosyalarını parse et ve gerçek stream URL'ini döndür
+    """
+    try:
+        # URL'nin uzantısını kontrol et
+        url_lower = url.lower()
+
+        # Direkt stream URL'si ise olduğu gibi döndür
+        if not any(ext in url_lower for ext in ['.pls', '.m3u', '.m3u8', '.asx', '.xspf']):
+            return url
+
+        # Playlist dosyasını indir
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            content = response.read().decode('utf-8', errors='ignore')
+
+        # PLS formatı
+        if '.pls' in url_lower or '[playlist]' in content.lower():
+            for line in content.split('\n'):
+                line = line.strip()
+                if line.startswith('File') and '=' in line:
+                    stream_url = line.split('=', 1)[1].strip()
+                    if stream_url.startswith('http'):
+                        return stream_url
+
+        # M3U/M3U8 formatı
+        elif '.m3u' in url_lower or '#EXTM3U' in content:
+            for line in content.split('\n'):
+                line = line.strip()
+                if line and not line.startswith('#') and line.startswith('http'):
+                    return line
+
+        # ASX formatı (XML-based)
+        elif '.asx' in url_lower or '<asx' in content.lower():
+            import re
+            # <ref href="stream_url" /> formatını ara
+            match = re.search(r'href=["\'](http[^"\']+)["\']', content, re.IGNORECASE)
+            if match:
+                return match.group(1)
+
+        # XSPF formatı (XML-based)
+        elif '.xspf' in url_lower or '<playlist' in content.lower():
+            import re
+            # <location>stream_url</location> formatını ara
+            match = re.search(r'<location>(http[^<]+)</location>', content, re.IGNORECASE)
+            if match:
+                return match.group(1)
+
+        # Parse edemediyse orijinal URL'i döndür
+        return url
+
+    except Exception as e:
+        print(f"Playlist parse hatası: {e}")
+        # Hata durumunda orijinal URL'i döndür
+        return url
 
 
 class MiniPlayer(QDialog):
@@ -31,6 +120,9 @@ class MiniPlayer(QDialog):
         self.setWindowTitle("Mini Player")
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setFixedSize(300, 120)
+
+        # Uygulama ikonu ayarla
+        self.setWindowIcon(create_app_icon())
 
         # Başlangıç pozisyonu (sağ üst köşe)
         screen = QApplication.desktop().screenGeometry()
@@ -147,6 +239,9 @@ class InternetRadioPlayer(QMainWindow):
         super().__init__()
         self.setWindowTitle("Internet Radyo Çalar")
         self.setGeometry(100, 100, 900, 700)
+
+        # Uygulama ikonu ayarla
+        self.setWindowIcon(create_app_icon())
 
         # VLC player instance
         self.vlc_instance = vlc.Instance('--no-xlib')
@@ -435,8 +530,11 @@ class InternetRadioPlayer(QMainWindow):
             if self.is_playing:
                 self.player.stop()
 
+            # Playlist dosyalarını parse et (.pls, .m3u, .asx, vb.)
+            stream_url = parse_playlist_url(url)
+
             # Create new media
-            media = self.vlc_instance.media_new(url)
+            media = self.vlc_instance.media_new(stream_url)
             self.player.set_media(media)
 
             # Play
@@ -769,6 +867,9 @@ def main():
     """Ana fonksiyon"""
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
+
+    # Uygulama ikonu ayarla (görev çubuğu için)
+    app.setWindowIcon(create_app_icon())
 
     player = InternetRadioPlayer()
     player.show()
