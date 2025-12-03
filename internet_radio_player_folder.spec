@@ -13,6 +13,10 @@ a = Analysis(
     datas=[
         ('radio_favorites_example.json', '.'),
         ('RADIO_README.md', '.'),
+        ('ambient_sounds.py', '.'),
+        ('download_sounds.py', '.'),
+        ('AMBIENT_SOUNDS_README.md', '.'),
+        ('sounds', 'sounds'),  # sounds/ klasörü
     ],
     hiddenimports=[
         'PyQt5.QtCore',

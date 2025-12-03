@@ -93,6 +93,10 @@ Aşağıdaki dosyaların mevcut olduğundan emin olun:
 ✓ build_exe.bat
 ✓ RADIO_README.md
 ✓ radio_favorites_example.json
+✓ ambient_sounds.py
+✓ download_sounds.py
+✓ AMBIENT_SOUNDS_README.md
+✓ sounds/ (klasör)
 ✓ radio_icon.ico (opsiyonel)
 ```
 
@@ -156,7 +160,11 @@ dist/
     ├── Qt5Widgets.dll
     ├── _internal/           (Tüm bağımlılıklar)
     ├── RADIO_README.md
-    └── radio_favorites_example.json
+    ├── AMBIENT_SOUNDS_README.md
+    ├── ambient_sounds.py
+    ├── download_sounds.py
+    ├── radio_favorites_example.json
+    └── sounds/              (Ses dosyaları klasörü - boş)
 ```
 
 ## 📦 Dağıtım
@@ -166,11 +174,16 @@ dist/
 #### Tek Dosya (Portable)
 ```
 InternetRadyoCalar.exe          # Ana uygulama
-RADIO_README.md                 # Kullanım kılavuzu
+RADIO_README.md                 # Radyo kullanım kılavuzu
+AMBIENT_SOUNDS_README.md        # Ambient sesler kılavuzu
+ambient_sounds.py               # Ses tanımları (gerekli)
+download_sounds.py              # Ses indirme scripti
 radio_favorites_example.json    # Örnek favoriler
+sounds/                         # Ses dosyaları klasörü (kullanıcı dolduracak)
 ```
 
-Kullanıcılar sadece EXE'yi çalıştırabilir. Kurulum gerekmez.
+**Önemli:** Ambient sesler için kullanıcılar `sounds/` klasörüne kendi ses dosyalarını eklemeli.
+`download_sounds.py` scriptini çalıştırarak hangi seslerin gerekli olduğunu görebilirler.
 
 #### Klasör Versiyonu
 ```
