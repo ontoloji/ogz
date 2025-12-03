@@ -380,6 +380,9 @@ class InternetRadioPlayer(QMainWindow):
         # Mini player
         self.mini_player = None
 
+        # Noise volume controls
+        self.volume_sliders = {}  # {sound_id: (container, slider, label)}
+
         # Arayüzü oluştur
         self.init_ui()
 
@@ -797,6 +800,25 @@ class InternetRadioPlayer(QMainWindow):
         self.active_sounds_label.setStyleSheet("color: #2196F3; padding: 5px;")
         control_layout.addWidget(self.active_sounds_label)
 
+        # Volume kontrol paneli (aktif sesler için)
+        volume_control_group = QGroupBox("🔊 Ses Seviyeleri (Aktif Sesler)")
+        volume_control_layout = QVBoxLayout()
+
+        # Scroll area for volume controls
+        self.volume_scroll = QScrollArea()
+        self.volume_scroll.setWidgetResizable(True)
+        self.volume_scroll.setMaximumHeight(200)
+        self.volume_scroll.setStyleSheet("QScrollArea { border: 1px solid #cccccc; }")
+
+        self.volume_controls_widget = QWidget()
+        self.volume_controls_layout = QVBoxLayout()
+        self.volume_controls_widget.setLayout(self.volume_controls_layout)
+        self.volume_scroll.setWidget(self.volume_controls_widget)
+
+        volume_control_layout.addWidget(self.volume_scroll)
+        volume_control_group.setLayout(volume_control_layout)
+        control_layout.addWidget(volume_control_group)
+
         # Tümünü durdur butonu
         stop_all_btn = QPushButton("⏹ Tümünü Durdur")
         stop_all_btn.clicked.connect(self.stop_all_noise)
@@ -1191,6 +1213,12 @@ class InternetRadioPlayer(QMainWindow):
             is_playing = self.noise_player.is_playing(sound_id)
             btn.setChecked(is_playing)
 
+        # Volume kontrolünü ekle/kaldır
+        if self.noise_player.is_playing(sound_id):
+            self.add_volume_control(sound_id)
+        else:
+            self.remove_volume_control(sound_id)
+
         # Aktif sesler etiketini güncelle
         self.update_active_sounds_display()
 
@@ -1201,9 +1229,75 @@ class InternetRadioPlayer(QMainWindow):
         else:
             self.statusBar().showMessage(f"⏹ {sound_name} durduruldu")
 
+    def add_volume_control(self, sound_id):
+        """Aktif ses için volume kontrolü ekle"""
+        if sound_id in self.volume_sliders:
+            return  # Zaten var
+
+        sound_info = AMBIENT_SOUNDS[sound_id]
+
+        # Container widget
+        container = QWidget()
+        container_layout = QHBoxLayout()
+        container_layout.setContentsMargins(5, 5, 5, 5)
+
+        # Ses ismi ve ikonu
+        name_label = QLabel(f"{sound_info['icon']} {sound_info['name']}")
+        name_label.setFixedWidth(150)
+        name_label.setFont(QFont("Arial", 9))
+
+        # Volume slider (0-100)
+        volume_slider = QSlider(Qt.Horizontal)
+        volume_slider.setMinimum(0)
+        volume_slider.setMaximum(100)
+        volume_slider.setValue(100)
+        volume_slider.setTickPosition(QSlider.TicksBelow)
+        volume_slider.setTickInterval(20)
+        volume_slider.valueChanged.connect(lambda value, sid=sound_id: self.change_noise_volume(sid, value))
+
+        # Volume değeri label
+        volume_label = QLabel("100%")
+        volume_label.setFixedWidth(40)
+        volume_label.setFont(QFont("Arial", 9))
+        volume_label.setAlignment(Qt.AlignCenter)
+
+        container_layout.addWidget(name_label)
+        container_layout.addWidget(volume_slider)
+        container_layout.addWidget(volume_label)
+        container.setLayout(container_layout)
+
+        # Layout'a ekle
+        self.volume_controls_layout.addWidget(container)
+        self.volume_sliders[sound_id] = (container, volume_slider, volume_label)
+
+    def remove_volume_control(self, sound_id):
+        """Durdurulan ses için volume kontrolünü kaldır"""
+        if sound_id not in self.volume_sliders:
+            return
+
+        container, slider, label = self.volume_sliders[sound_id]
+        self.volume_controls_layout.removeWidget(container)
+        container.deleteLater()
+        del self.volume_sliders[sound_id]
+
+    def change_noise_volume(self, sound_id, value):
+        """Belirli bir noise için volume değiştir"""
+        # Noise player'da volume'u güncelle
+        self.noise_player.set_volume(sound_id, value)
+
+        # Label'ı güncelle
+        if sound_id in self.volume_sliders:
+            _, _, label = self.volume_sliders[sound_id]
+            label.setText(f"{value}%")
+
     def stop_all_noise(self):
         """Tüm ambient sesleri durdur"""
         self.noise_player.stop_all()
+
+        # Tüm volume kontrollerini kaldır
+        for sound_id in list(self.volume_sliders.keys()):
+            self.remove_volume_control(sound_id)
+
         self.update_noise_buttons_state()
         self.statusBar().showMessage("Tüm sesler durduruldu")
 
