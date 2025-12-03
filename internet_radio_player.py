@@ -12,12 +12,14 @@ import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QPushButton, QLineEdit, QLabel,
                              QSlider, QListWidget, QGroupBox, QMessageBox,
-                             QListWidgetItem, QInputDialog, QSplitter, QDialog)
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
+                             QListWidgetItem, QInputDialog, QSplitter, QDialog,
+                             QScrollArea, QGridLayout, QTabWidget)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QPainter, QColor, QPen
 import vlc
 import urllib.request
 import urllib.parse
+from ambient_sounds import AMBIENT_SOUNDS, SOUNDS_DIR
 
 
 def create_app_icon():
@@ -105,6 +107,112 @@ def parse_playlist_url(url):
         print(f"Playlist parse hatası: {e}")
         # Hata durumunda orijinal URL'i döndür
         return url
+
+
+class NoisePlayer:
+    """Multi-channel ambient noise player - 30 sese kadar aynı anda çalabilir"""
+
+    def __init__(self):
+        """Her ses için ayrı VLC instance oluştur"""
+        self.players = {}  # {sound_id: {'player': vlc_player, 'instance': vlc_instance, 'active': bool}}
+        self.vlc_base_instance = vlc.Instance('--no-xlib')
+
+    def toggle_sound(self, sound_id):
+        """Sesi aç/kapat (toggle)"""
+        if sound_id not in AMBIENT_SOUNDS:
+            print(f"Bilinmeyen ses: {sound_id}")
+            return False
+
+        sound_info = AMBIENT_SOUNDS[sound_id]
+        sound_file = os.path.join(SOUNDS_DIR, sound_info['file'])
+
+        # Ses dosyası var mı kontrol et
+        if not os.path.exists(sound_file):
+            return False  # Dosya yok
+
+        # Eğer çalıyorsa durdur
+        if sound_id in self.players and self.players[sound_id]['active']:
+            self.stop_sound(sound_id)
+            return False
+
+        # Değilse çal
+        return self.play_sound(sound_id, sound_file)
+
+    def play_sound(self, sound_id, sound_file):
+        """Sesi çal (loop modunda)"""
+        try:
+            # Yeni player oluştur veya mevcut olanı kullan
+            if sound_id not in self.players:
+                instance = vlc.Instance('--no-xlib')
+                player = instance.media_player_new()
+                self.players[sound_id] = {
+                    'instance': instance,
+                    'player': player,
+                    'active': False,
+                    'volume': 100
+                }
+
+            player = self.players[sound_id]['player']
+            instance = self.players[sound_id]['instance']
+
+            # Media oluştur
+            media = instance.media_new(sound_file)
+            player.set_media(media)
+
+            # Loop için event manager kullan
+            event_manager = player.event_manager()
+            event_manager.event_attach(vlc.EventType.MediaPlayerEndReached,
+                                     lambda event: self._loop_sound(sound_id))
+
+            # Ses seviyesini ayarla
+            volume = self.players[sound_id].get('volume', 100)
+            player.audio_set_volume(volume)
+
+            # Çal
+            player.play()
+            self.players[sound_id]['active'] = True
+
+            return True
+
+        except Exception as e:
+            print(f"Ses çalma hatası ({sound_id}): {e}")
+            return False
+
+    def _loop_sound(self, sound_id):
+        """Ses bitince tekrar başlat (seamless loop)"""
+        if sound_id in self.players and self.players[sound_id]['active']:
+            player = self.players[sound_id]['player']
+            player.stop()
+            player.play()
+
+    def stop_sound(self, sound_id):
+        """Sesi durdur"""
+        if sound_id in self.players:
+            try:
+                self.players[sound_id]['player'].stop()
+                self.players[sound_id]['active'] = False
+            except Exception as e:
+                print(f"Ses durdurma hatası ({sound_id}): {e}")
+
+    def stop_all(self):
+        """Tüm sesleri durdur"""
+        for sound_id in list(self.players.keys()):
+            self.stop_sound(sound_id)
+
+    def is_playing(self, sound_id):
+        """Ses çalıyor mu kontrol et"""
+        return sound_id in self.players and self.players[sound_id]['active']
+
+    def set_volume(self, sound_id, volume):
+        """Belirli bir ses için volume ayarla (0-100)"""
+        if sound_id in self.players:
+            self.players[sound_id]['volume'] = volume
+            if self.players[sound_id]['active']:
+                self.players[sound_id]['player'].audio_set_volume(volume)
+
+    def get_active_sounds(self):
+        """Aktif seslerin listesini döndür"""
+        return [sid for sid, info in self.players.items() if info['active']]
 
 
 class MiniPlayer(QDialog):
@@ -247,6 +355,10 @@ class InternetRadioPlayer(QMainWindow):
         self.vlc_instance = vlc.Instance('--no-xlib')
         self.player = self.vlc_instance.media_player_new()
 
+        # Noise player
+        self.noise_player = NoisePlayer()
+        self.current_mode = "radio"  # "radio" veya "noise"
+
         # Equalizer
         self.equalizer = None
         self.eq_preamp = 0.0
@@ -297,15 +409,66 @@ class InternetRadioPlayer(QMainWindow):
         main_layout = QVBoxLayout()
         central_widget.setLayout(main_layout)
 
-        # Başlık
+        # Başlık ve mode switch
+        header_layout = QHBoxLayout()
+
         title = QLabel("🎵 Internet Radyo Çalar")
         title.setFont(QFont("Arial", 18, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(title)
+
+        # Mode switch button
+        self.mode_switch_btn = QPushButton("🎵 Noise")
+        self.mode_switch_btn.setFixedSize(120, 40)
+        self.mode_switch_btn.clicked.connect(self.toggle_mode)
+        self.mode_switch_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #9C27B0;
+                color: white;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #7B1FA2;
+            }
+        """)
+
+        header_layout.addStretch()
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        header_layout.addWidget(self.mode_switch_btn)
+
+        main_layout.addLayout(header_layout)
+
+        # Stacked widget for mode switching
+        from PyQt5.QtWidgets import QStackedWidget
+        self.stacked_widget = QStackedWidget()
+        main_layout.addWidget(self.stacked_widget)
+
+        # Radio mode widget
+        self.radio_widget = QWidget()
+        self.init_radio_ui()
+        self.stacked_widget.addWidget(self.radio_widget)
+
+        # Noise mode widget
+        self.noise_widget = QWidget()
+        self.init_noise_ui()
+        self.stacked_widget.addWidget(self.noise_widget)
+
+        # Start with radio mode
+        self.stacked_widget.setCurrentIndex(0)
+
+        # Durum çubuğu
+        self.statusBar().showMessage("Hazır")
+
+    def init_radio_ui(self):
+        """Radio mode arayüzü"""
+        radio_layout = QVBoxLayout()
+        self.radio_widget.setLayout(radio_layout)
 
         # Splitter ile sol ve sağ paneli ayır
         splitter = QSplitter(Qt.Horizontal)
-        main_layout.addWidget(splitter)
+        radio_layout.addWidget(splitter)
 
         # Sol panel - Kontroller ve URL
         left_panel = QWidget()
@@ -510,8 +673,149 @@ class InternetRadioPlayer(QMainWindow):
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 1)
 
-        # Durum çubuğu
-        self.statusBar().showMessage("Hazır")
+    def init_noise_ui(self):
+        """Noise mode arayüzü - 30 ambient ses"""
+        noise_layout = QVBoxLayout()
+        self.noise_widget.setLayout(noise_layout)
+
+        # Bilgi etiketi
+        info_label = QLabel("🎵 Ambient Noise Sistemi - İstediğin seslere tıkla (kombinasyon yapabilirsin)")
+        info_label.setFont(QFont("Arial", 11, QFont.Bold))
+        info_label.setAlignment(Qt.AlignCenter)
+        info_label.setStyleSheet("color: #9C27B0; padding: 10px; background-color: #f0f0f0; border-radius: 5px;")
+        noise_layout.addWidget(info_label)
+
+        # Scroll area for sounds
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; }")
+
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout()
+        scroll_content.setLayout(scroll_layout)
+
+        # Ses dosyası kontrol uyarısı
+        sounds_dir_exists = os.path.exists(SOUNDS_DIR)
+        if not sounds_dir_exists or not any(os.path.exists(os.path.join(SOUNDS_DIR, s['file'])) for s in AMBIENT_SOUNDS.values()):
+            warning_box = QGroupBox("⚠️ Ses Dosyaları Bulunamadı")
+            warning_layout = QVBoxLayout()
+            warning_text = QLabel(
+                "Ambient sesler için ses dosyalarını indirmen gerekiyor.\n\n"
+                "1. 'download_sounds.py' scriptini çalıştır\n"
+                "2. 'sounds/' klasörüne manuel olarak ses dosyalarını koy\n"
+                "3. Detaylı bilgi için AMBIENT_SOUNDS_README.md dosyasına bak"
+            )
+            warning_text.setWordWrap(True)
+            warning_text.setStyleSheet("color: #f44336; font-size: 11px; padding: 10px;")
+            warning_layout.addWidget(warning_text)
+            warning_box.setLayout(warning_layout)
+            scroll_layout.addWidget(warning_box)
+
+        # Kategorilere göre grupla
+        categories = {
+            'nature': {'name': '🌿 Doğa Sesleri', 'sounds': []},
+            'ambient': {'name': '🎧 Ambient Sesleri', 'sounds': []},
+            'relax': {'name': '😌 Rahatlama Sesleri', 'sounds': []}
+        }
+
+        for sound_id, sound_info in AMBIENT_SOUNDS.items():
+            category = sound_info.get('category', 'ambient')
+            if category in categories:
+                categories[category]['sounds'].append((sound_id, sound_info))
+
+        # Her kategori için butonlar oluştur
+        self.noise_buttons = {}  # {sound_id: button}
+
+        for category_id, category_info in categories.items():
+            if not category_info['sounds']:
+                continue
+
+            category_group = QGroupBox(category_info['name'])
+            category_layout = QGridLayout()
+
+            # Sesleri grid içine yerleştir (5 sütun)
+            sounds = sorted(category_info['sounds'], key=lambda x: x[1]['name'])
+            for idx, (sound_id, sound_info) in enumerate(sounds):
+                row = idx // 5
+                col = idx % 5
+
+                btn = QPushButton(f"{sound_info['icon']}\n{sound_info['name']}")
+                btn.setFixedSize(100, 70)
+                btn.setCheckable(True)
+                btn.clicked.connect(lambda checked, sid=sound_id: self.toggle_noise_sound(sid))
+
+                # Ses dosyası var mı kontrol et
+                sound_file = os.path.join(SOUNDS_DIR, sound_info['file'])
+                if not os.path.exists(sound_file):
+                    btn.setEnabled(False)
+                    btn.setToolTip(f"Ses dosyası bulunamadı: {sound_info['file']}")
+                    btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #cccccc;
+                            color: #666666;
+                            font-size: 10px;
+                            border: 1px solid #999999;
+                        }
+                    """)
+                else:
+                    btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #f5f5f5;
+                            color: #333333;
+                            font-size: 10px;
+                            border: 2px solid #9C27B0;
+                            border-radius: 5px;
+                        }
+                        QPushButton:hover {
+                            background-color: #e0e0e0;
+                        }
+                        QPushButton:checked {
+                            background-color: #4CAF50;
+                            color: white;
+                            border: 2px solid #2E7D32;
+                            font-weight: bold;
+                        }
+                    """)
+
+                category_layout.addWidget(btn, row, col)
+                self.noise_buttons[sound_id] = btn
+
+            category_group.setLayout(category_layout)
+            scroll_layout.addWidget(category_group)
+
+        scroll.setWidget(scroll_content)
+        noise_layout.addWidget(scroll)
+
+        # Alt kontrol paneli
+        control_panel = QGroupBox("Kontroller")
+        control_layout = QVBoxLayout()
+
+        # Aktif sesler göstergesi
+        self.active_sounds_label = QLabel("Aktif sesler: Yok")
+        self.active_sounds_label.setAlignment(Qt.AlignCenter)
+        self.active_sounds_label.setFont(QFont("Arial", 10))
+        self.active_sounds_label.setStyleSheet("color: #2196F3; padding: 5px;")
+        control_layout.addWidget(self.active_sounds_label)
+
+        # Tümünü durdur butonu
+        stop_all_btn = QPushButton("⏹ Tümünü Durdur")
+        stop_all_btn.clicked.connect(self.stop_all_noise)
+        stop_all_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                color: white;
+                font-size: 12px;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #da190b;
+            }
+        """)
+        control_layout.addWidget(stop_all_btn)
+
+        control_panel.setLayout(control_layout)
+        noise_layout.addWidget(control_panel)
 
     def play_radio(self):
         """Radyo çalmayı başlat"""
@@ -851,10 +1155,89 @@ class InternetRadioPlayer(QMainWindow):
         self.change_volume(value)
         self.mini_player.update_volume_label(value)
 
+    def toggle_mode(self):
+        """Radio ve Noise modu arasında geçiş yap"""
+        if self.current_mode == "radio":
+            # Noise moduna geç
+            self.current_mode = "noise"
+            self.mode_switch_btn.setText("📻 Radio")
+            self.stacked_widget.setCurrentIndex(1)  # Noise widget
+
+            # Radio'yu durdur
+            if self.is_playing:
+                self.stop_radio()
+
+            self.statusBar().showMessage("Noise Modu Aktif")
+
+        else:
+            # Radio moduna geç
+            self.current_mode = "radio"
+            self.mode_switch_btn.setText("🎵 Noise")
+            self.stacked_widget.setCurrentIndex(0)  # Radio widget
+
+            # Tüm noise'ları durdur
+            self.noise_player.stop_all()
+            self.update_noise_buttons_state()
+
+            self.statusBar().showMessage("Radio Modu Aktif")
+
+    def toggle_noise_sound(self, sound_id):
+        """Ambient sesi aç/kapat"""
+        success = self.noise_player.toggle_sound(sound_id)
+
+        # Buton durumunu güncelle
+        if sound_id in self.noise_buttons:
+            btn = self.noise_buttons[sound_id]
+            is_playing = self.noise_player.is_playing(sound_id)
+            btn.setChecked(is_playing)
+
+        # Aktif sesler etiketini güncelle
+        self.update_active_sounds_display()
+
+        # Durum mesajı
+        sound_name = AMBIENT_SOUNDS[sound_id]['name']
+        if self.noise_player.is_playing(sound_id):
+            self.statusBar().showMessage(f"▶ {sound_name} çalıyor")
+        else:
+            self.statusBar().showMessage(f"⏹ {sound_name} durduruldu")
+
+    def stop_all_noise(self):
+        """Tüm ambient sesleri durdur"""
+        self.noise_player.stop_all()
+        self.update_noise_buttons_state()
+        self.statusBar().showMessage("Tüm sesler durduruldu")
+
+    def update_noise_buttons_state(self):
+        """Tüm noise butonlarının durumunu güncelle"""
+        for sound_id, btn in self.noise_buttons.items():
+            is_playing = self.noise_player.is_playing(sound_id)
+            btn.setChecked(is_playing)
+
+        self.update_active_sounds_display()
+
+    def update_active_sounds_display(self):
+        """Aktif sesler göstergesini güncelle"""
+        active_sounds = self.noise_player.get_active_sounds()
+
+        if not active_sounds:
+            self.active_sounds_label.setText("Aktif sesler: Yok")
+            self.active_sounds_label.setStyleSheet("color: #999999; padding: 5px;")
+        else:
+            sound_names = [AMBIENT_SOUNDS[sid]['icon'] for sid in active_sounds[:10]]  # İlk 10 ikonu göster
+            display_text = " ".join(sound_names)
+            if len(active_sounds) > 10:
+                display_text += f" +{len(active_sounds) - 10}"
+
+            self.active_sounds_label.setText(f"Aktif sesler ({len(active_sounds)}): {display_text}")
+            self.active_sounds_label.setStyleSheet("color: #4CAF50; padding: 5px; font-weight: bold;")
+
     def closeEvent(self, event):
         """Pencere kapatılırken temizlik yap"""
         if self.is_playing:
             self.player.stop()
+
+        # Noise player'ı durdur
+        self.noise_player.stop_all()
 
         # Mini player'ı kapat
         if self.mini_player:
