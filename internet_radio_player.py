@@ -235,6 +235,7 @@ class MusicPlayer:
         try:
             cmd = [
                 'yt-dlp',
+                '--proxy', '',  # Proxy kullanma
                 '--no-playlist',
                 '--flat-playlist',
                 '--dump-json',
@@ -245,11 +246,13 @@ class MusicPlayer:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=15
+                timeout=20  # 20 saniye timeout
             )
 
             if result.returncode != 0:
-                print(f"yt-dlp error: {result.stderr}")
+                error_msg = result.stderr
+                print(f"yt-dlp error: {error_msg}")
+                print(f"yt-dlp stdout: {result.stdout}")
                 return []
 
             # Her satır bir JSON objesi
@@ -1714,13 +1717,44 @@ class InternetRadioPlayer(QMainWindow):
             QMessageBox.warning(self, "Uyarı", "Lütfen bir şarkı adı girin!")
             return
 
-        self.statusBar().showMessage(f"Aranıyor: {query}...")
+        self.statusBar().showMessage(f"Aranıyor: {query}... (10-15 saniye sürebilir)")
         self.search_results_list.clear()
+
+        # "Aranıyor..." mesajı ekle
+        loading_item = QListWidgetItem("🔍 Aranıyor... Lütfen bekleyin...")
+        self.search_results_list.addItem(loading_item)
 
         # Background thread'de ara
         def do_search():
             results = self.music_player.search_youtube(query, max_results=15)
-            # UI güncellemesi için signal kullan veya QTimer ile kontrol et
+
+            # UI güncellemesi
+            self.search_results_list.clear()
+
+            if not results:
+                # Hata veya sonuç yok
+                error_item = QListWidgetItem("❌ Sonuç bulunamadı veya yt-dlp hatası!")
+                self.search_results_list.addItem(error_item)
+
+                help_item = QListWidgetItem("💡 Çözüm: Terminal'de 'pip install yt-dlp' çalıştırın")
+                self.search_results_list.addItem(help_item)
+
+                self.statusBar().showMessage("❌ Arama başarısız - yt-dlp kontrol edin!")
+
+                # GUI'de hata mesajı göster
+                QTimer.singleShot(100, lambda: QMessageBox.warning(
+                    self,
+                    "Arama Hatası",
+                    "YouTube araması başarısız!\n\n"
+                    "Olası nedenler:\n"
+                    "1. yt-dlp kurulu değil (pip install yt-dlp)\n"
+                    "2. İnternet bağlantısı yok\n"
+                    "3. YouTube erişim sorunu\n\n"
+                    "Terminal'i kontrol edin."
+                ))
+                return
+
+            # Sonuçları göster
             for result in results:
                 title = result['title']
                 duration = result['duration']
@@ -1732,7 +1766,7 @@ class InternetRadioPlayer(QMainWindow):
                 item.setData(Qt.UserRole, result['url'])  # URL'i sakla
                 self.search_results_list.addItem(item)
 
-            self.statusBar().showMessage(f"{len(results)} sonuç bulundu")
+            self.statusBar().showMessage(f"✓ {len(results)} sonuç bulundu")
 
         thread = threading.Thread(target=do_search, daemon=True)
         thread.start()
