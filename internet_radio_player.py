@@ -227,8 +227,25 @@ class MusicPlayer:
         self.player = vlc_player
         self.current_song = None
         self.playlist = []  # [(title, url), ...]
+        self.original_playlist = []  # Shuffle için orijinal sıra
         self.current_index = -1
         self.is_playing = False
+        self.shuffle_mode = False  # Karışık çalma modu
+        self.loop_mode = True  # Liste bitince başa dön (default: açık)
+
+        # Cache sistemi
+        import tempfile
+        import hashlib
+        self.cache_dir = os.path.join(tempfile.gettempdir(), "rpo_music_cache")
+        os.makedirs(self.cache_dir, exist_ok=True)
+        print(f"🗂️ Music cache: {self.cache_dir}")
+
+    def get_cache_path(self, youtube_url):
+        """YouTube URL için cache dosya yolunu döndür"""
+        import hashlib
+        # URL'den hash oluştur (dosya adı için)
+        url_hash = hashlib.md5(youtube_url.encode()).hexdigest()
+        return os.path.join(self.cache_dir, f"{url_hash}.m4a")
 
     def search_youtube(self, query, max_results=10):
         """YouTube'da şarkı ara (yt-dlp kullanarak)"""
@@ -328,25 +345,78 @@ class MusicPlayer:
             print(f"Stream URL hatası: {e}")
             return None
 
-    def play_song(self, youtube_url, title="Unknown"):
-        """YouTube şarkısını çal"""
+    def play_song(self, youtube_url, title="Unknown", on_end_callback=None):
+        """YouTube şarkısını çal (cache'den veya indir)"""
         self.current_song = {'title': title, 'url': youtube_url}
+        self.on_end_callback = on_end_callback  # Şarkı bitince çağrılacak callback
 
-        # Stream URL'i al (background thread'de)
+        # Cache kontrolü ve çalma (background thread'de)
         def get_and_play():
-            stream_url = self.get_stream_url(youtube_url)
-            if stream_url:
-                # VLC ile çal
-                media = self.vlc_instance.media_new(stream_url)
-                self.player.set_media(media)
-                self.player.play()
-                self.is_playing = True
+            cache_path = self.get_cache_path(youtube_url)
+
+            # Cache'de var mı kontrol et
+            if os.path.exists(cache_path):
+                print(f"✅ Cache'den çalınıyor: {title}")
+                file_url = cache_path
             else:
-                print("Şarkı çalınamadı")
-                self.is_playing = False
+                # Cache'de yok, indir
+                print(f"⬇️ İndiriliyor: {title}")
+                file_url = self.download_to_cache(youtube_url, cache_path)
+                if not file_url:
+                    print("Şarkı indirilemedi")
+                    self.is_playing = False
+                    return
+
+            # VLC ile çal
+            media = self.vlc_instance.media_new(file_url)
+            self.player.set_media(media)
+            self.player.play()
+            self.is_playing = True
+
+            # Şarkı bitince event listener
+            if self.on_end_callback:
+                event_manager = self.player.event_manager()
+                event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, self._on_song_ended)
 
         thread = threading.Thread(target=get_and_play, daemon=True)
         thread.start()
+
+    def download_to_cache(self, youtube_url, cache_path):
+        """Şarkıyı cache'e indir"""
+        try:
+            cmd = [
+                'yt-dlp',
+                '--format', 'bestaudio[ext=m4a]/bestaudio',
+                '--output', cache_path,
+                '--no-playlist',
+                youtube_url
+            ]
+
+            print(f"[CACHE] İndiriliyor: {youtube_url}")
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60  # 60 saniye timeout
+            )
+
+            if result.returncode == 0 and os.path.exists(cache_path):
+                print(f"[CACHE] ✅ İndirildi: {cache_path}")
+                return cache_path
+            else:
+                print(f"[CACHE] ❌ Hata: {result.stderr}")
+                return None
+
+        except Exception as e:
+            print(f"[CACHE] İndirme hatası: {e}")
+            return None
+
+    def _on_song_ended(self, event):
+        """Şarkı bitince otomatik sonrakine geç"""
+        print(f"🎵 Şarkı bitti: {self.current_song['title']}")
+        if self.on_end_callback:
+            # GUI thread'de çalıştır
+            self.on_end_callback()
 
     def stop(self):
         """Müziği durdur"""
@@ -362,17 +432,25 @@ class MusicPlayer:
         if 0 <= index < len(self.playlist):
             del self.playlist[index]
 
-    def play_playlist_song(self, index):
+    def play_playlist_song(self, index, on_end_callback=None):
         """Playlist'ten şarkı çal"""
         if 0 <= index < len(self.playlist):
             title, url = self.playlist[index]
             self.current_index = index
-            self.play_song(url, title)
+            self.play_song(url, title, on_end_callback)
 
     def next_song(self):
-        """Playlist'te sonraki şarkı"""
+        """Playlist'te sonraki şarkı (loop desteği ile)"""
+        if len(self.playlist) == 0:
+            return
+
         if self.current_index < len(self.playlist) - 1:
+            # Listede sonraki şarkı var
             self.play_playlist_song(self.current_index + 1)
+        elif self.loop_mode:
+            # Liste bitti, loop aktifse başa dön
+            print("🔁 Playlist bitti, başa dönülüyor...")
+            self.play_playlist_song(0)
 
     def previous_song(self):
         """Playlist'te önceki şarkı"""
@@ -394,10 +472,34 @@ class MusicPlayer:
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 self.playlist = json.load(f)
+                self.original_playlist = self.playlist.copy()  # Orijinal sırayı sakla
             return True
         except Exception as e:
             print(f"Playlist yükleme hatası: {e}")
             return False
+
+    def toggle_shuffle(self):
+        """Karışık çalma modunu aç/kapat"""
+        import random
+        self.shuffle_mode = not self.shuffle_mode
+
+        if self.shuffle_mode:
+            # Karıştır
+            self.original_playlist = self.playlist.copy()  # Orijinali sakla
+            random.shuffle(self.playlist)
+            print("🔀 Shuffle mode: ON")
+        else:
+            # Orijinal sıraya dön
+            self.playlist = self.original_playlist.copy()
+            print("🔀 Shuffle mode: OFF")
+
+        return self.shuffle_mode
+
+    def toggle_loop(self):
+        """Loop modunu aç/kapat"""
+        self.loop_mode = not self.loop_mode
+        print(f"🔁 Loop mode: {'ON' if self.loop_mode else 'OFF'}")
+        return self.loop_mode
 
 
 class MiniPlayer(QDialog):
@@ -1159,6 +1261,21 @@ class InternetRadioPlayer(QMainWindow):
         playlist_buttons.addWidget(clear_pl_btn)
         playlist_layout.addLayout(playlist_buttons)
 
+        # Shuffle ve Loop butonları
+        mode_buttons = QHBoxLayout()
+
+        self.shuffle_btn = QPushButton("🔀 Karışık: KAPALI")
+        self.shuffle_btn.clicked.connect(self.toggle_shuffle_mode)
+        self.shuffle_btn.setStyleSheet("background-color: #607D8B; color: white;")
+
+        self.loop_btn = QPushButton("🔁 Loop: AÇIK")
+        self.loop_btn.clicked.connect(self.toggle_loop_mode)
+        self.loop_btn.setStyleSheet("background-color: #4CAF50; color: white;")  # Başlangıçta açık
+
+        mode_buttons.addWidget(self.shuffle_btn)
+        mode_buttons.addWidget(self.loop_btn)
+        playlist_layout.addLayout(mode_buttons)
+
         playlist_group.setLayout(playlist_layout)
         right_layout.addWidget(playlist_group)
 
@@ -1209,6 +1326,61 @@ class InternetRadioPlayer(QMainWindow):
 
         controls_group.setLayout(controls_layout)
         music_layout.addWidget(controls_group)
+
+        # Ses kontrolü (Radio ile aynı - 0-200%)
+        volume_group = QGroupBox("🔊 Ses Seviyesi")
+        volume_layout = QVBoxLayout()
+
+        # Slider ve label
+        slider_layout = QHBoxLayout()
+
+        # Ana ses slider (0-200% - VLC amplification)
+        self.music_volume_slider = QSlider(Qt.Horizontal)
+        self.music_volume_slider.setMinimum(0)
+        self.music_volume_slider.setMaximum(200)
+        self.music_volume_slider.setValue(100)
+        self.music_volume_slider.setTickPosition(QSlider.TicksBelow)
+        self.music_volume_slider.setTickInterval(25)
+        self.music_volume_slider.valueChanged.connect(self.change_volume)
+
+        self.music_volume_label = QLabel("100%")
+        self.music_volume_label.setFont(QFont("Arial", 11, QFont.Bold))
+        self.music_volume_label.setMinimumWidth(60)
+
+        # Preset butonlar
+        volume_buttons = QHBoxLayout()
+
+        vol_50_btn = QPushButton("50%")
+        vol_50_btn.clicked.connect(lambda: self.music_volume_slider.setValue(50))
+        vol_50_btn.setFixedWidth(50)
+
+        vol_100_btn = QPushButton("100%")
+        vol_100_btn.clicked.connect(lambda: self.music_volume_slider.setValue(100))
+        vol_100_btn.setFixedWidth(50)
+        vol_100_btn.setStyleSheet("background-color: #2196F3; color: white;")
+
+        vol_150_btn = QPushButton("150%")
+        vol_150_btn.clicked.connect(lambda: self.music_volume_slider.setValue(150))
+        vol_150_btn.setFixedWidth(50)
+        vol_150_btn.setStyleSheet("background-color: #FF9800; color: white;")
+
+        vol_200_btn = QPushButton("200%")
+        vol_200_btn.clicked.connect(lambda: self.music_volume_slider.setValue(200))
+        vol_200_btn.setFixedWidth(50)
+        vol_200_btn.setStyleSheet("background-color: #f44336; color: white;")
+
+        volume_buttons.addWidget(vol_50_btn)
+        volume_buttons.addWidget(vol_100_btn)
+        volume_buttons.addWidget(vol_150_btn)
+        volume_buttons.addWidget(vol_200_btn)
+
+        slider_layout.addWidget(self.music_volume_slider)
+        slider_layout.addWidget(self.music_volume_label)
+        slider_layout.addLayout(volume_buttons)
+
+        volume_layout.addLayout(slider_layout)
+        volume_group.setLayout(volume_layout)
+        music_layout.addWidget(volume_group)
 
     def play_radio(self):
         """Radyo çalmayı başlat"""
@@ -1284,17 +1456,35 @@ class InternetRadioPlayer(QMainWindow):
                 self.mini_player.update_status("Durduruldu", "#FF9800")
 
     def change_volume(self, value):
-        """Ses seviyesini değiştir"""
+        """Ses seviyesini değiştir - Tüm modlar için ortak"""
         self.player.audio_set_volume(value)
-        self.volume_label.setText(f"{value}%")
 
-        # Ses seviyesine göre renk değiştir
+        # Renk seçimi (seviyeye göre)
         if value > 150:
-            self.volume_label.setStyleSheet("color: #f44336; font-weight: bold;")  # Kırmızı
+            color_style = "color: #f44336; font-weight: bold;"  # Kırmızı
         elif value > 100:
-            self.volume_label.setStyleSheet("color: #FF9800; font-weight: bold;")  # Turuncu
+            color_style = "color: #FF9800; font-weight: bold;"  # Turuncu
         else:
-            self.volume_label.setStyleSheet("color: #4CAF50; font-weight: bold;")  # Yeşil
+            color_style = "color: #4CAF50; font-weight: bold;"  # Yeşil
+
+        # Radio label'ını güncelle
+        self.volume_label.setText(f"{value}%")
+        self.volume_label.setStyleSheet(color_style)
+
+        # Music label'ını da güncelle (varsa)
+        if hasattr(self, 'music_volume_label'):
+            self.music_volume_label.setText(f"{value}%")
+            self.music_volume_label.setStyleSheet(color_style)
+
+        # Her iki slider'ı da senkronize et (infinite loop'tan kaçınmak için blockSignals kullan)
+        if hasattr(self, 'music_volume_slider'):
+            self.music_volume_slider.blockSignals(True)
+            self.music_volume_slider.setValue(value)
+            self.music_volume_slider.blockSignals(False)
+
+        self.volume_slider.blockSignals(True)
+        self.volume_slider.setValue(value)
+        self.volume_slider.blockSignals(False)
 
     def change_eq_band(self, band, value):
         """Equalizer bandını değiştir"""
@@ -1553,16 +1743,9 @@ class InternetRadioPlayer(QMainWindow):
         if mode == self.current_mode:
             return  # Zaten bu moddayız
 
-        # Mevcut modu durdur
-        if self.current_mode == "radio" and self.is_playing:
-            self.stop_radio()
-        elif self.current_mode == "noise":
-            self.noise_player.stop_all()
-            self.update_noise_buttons_state()
-        elif self.current_mode == "music":
-            self.music_player.stop()
-
-        # Yeni moda geç
+        # NOT: Artık mod değiştirirken çalan ses durmuyor!
+        # Kullanıcı istediği modda ses seviyesini ayarlayabilir
+        # Sadece mode UI'sını değiştir
         self.current_mode = mode
 
         # Buton stillerini güncelle
@@ -1797,7 +1980,8 @@ class InternetRadioPlayer(QMainWindow):
         title = item.text().replace("🎵 ", "")
 
         self.statusBar().showMessage(f"Yükleniyor: {title}...")
-        self.music_player.play_song(url, title)
+        # Şarkı bitince otomatik sonraki (playlist'teyse)
+        self.music_player.play_song(url, title, on_end_callback=lambda: QTimer.singleShot(500, self.auto_next_song))
 
         # Equalizer'ı uygula
         QTimer.singleShot(2000, self.apply_equalizer)
@@ -1825,7 +2009,8 @@ class InternetRadioPlayer(QMainWindow):
             return
 
         index = self.music_playlist_list.row(item)
-        self.music_player.play_playlist_song(index)
+        # Şarkı bitince otomatik sonrakine geç
+        self.music_player.play_playlist_song(index, on_end_callback=lambda: QTimer.singleShot(500, self.auto_next_song))
 
         title, _ = self.music_player.playlist[index]
         self.current_music_label.setText(f"♪ {title}")
@@ -1905,8 +2090,37 @@ class InternetRadioPlayer(QMainWindow):
         self.music_stop_btn.setEnabled(False)
 
     def music_next(self):
-        """Sonraki şarkı"""
-        self.music_player.next_song()
+        """Sonraki şarkı (manuel)"""
+        self._play_next_song()
+
+    def auto_next_song(self):
+        """Otomatik sonraki şarkı (şarkı bitince)"""
+        print("🎵 Auto next song triggered")
+        self._play_next_song()
+
+    def _play_next_song(self):
+        """Sonraki şarkıyı çal (internal)"""
+        old_index = self.music_player.current_index
+
+        # next_song metodunu çağır
+        if len(self.music_player.playlist) == 0:
+            return
+
+        if self.music_player.current_index < len(self.music_player.playlist) - 1:
+            # Listede sonraki şarkı var
+            new_index = self.music_player.current_index + 1
+        elif self.music_player.loop_mode:
+            # Liste bitti, loop aktifse başa dön
+            print("🔁 Playlist bitti, başa dönülüyor...")
+            new_index = 0
+        else:
+            # Loop kapalı ve liste bitti
+            print("🔁 Playlist bitti, loop kapalı")
+            return
+
+        # Yeni şarkıyı çal
+        self.music_player.play_playlist_song(new_index, on_end_callback=lambda: QTimer.singleShot(500, self.auto_next_song))
+
         if self.music_player.current_index >= 0:
             title, _ = self.music_player.playlist[self.music_player.current_index]
             self.current_music_label.setText(f"♪ {title}")
@@ -1917,14 +2131,48 @@ class InternetRadioPlayer(QMainWindow):
 
     def music_previous(self):
         """Önceki şarkı"""
-        self.music_player.previous_song()
-        if self.music_player.current_index >= 0:
-            title, _ = self.music_player.playlist[self.music_player.current_index]
-            self.current_music_label.setText(f"♪ {title}")
-            self.music_stop_btn.setEnabled(True)
+        if self.music_player.current_index > 0:
+            new_index = self.music_player.current_index - 1
+            self.music_player.play_playlist_song(new_index, on_end_callback=lambda: QTimer.singleShot(500, self.auto_next_song))
 
-            # Equalizer'ı uygula
-            QTimer.singleShot(2000, self.apply_equalizer)
+            if self.music_player.current_index >= 0:
+                title, _ = self.music_player.playlist[self.music_player.current_index]
+                self.current_music_label.setText(f"♪ {title}")
+                self.music_stop_btn.setEnabled(True)
+
+                # Equalizer'ı uygula
+                QTimer.singleShot(2000, self.apply_equalizer)
+
+    def toggle_shuffle_mode(self):
+        """Karışık çalma modunu aç/kapat"""
+        is_shuffle = self.music_player.toggle_shuffle()
+
+        if is_shuffle:
+            self.shuffle_btn.setText("🔀 Karışık: AÇIK")
+            self.shuffle_btn.setStyleSheet("background-color: #4CAF50; color: white;")
+        else:
+            self.shuffle_btn.setText("🔀 Karışık: KAPALI")
+            self.shuffle_btn.setStyleSheet("background-color: #607D8B; color: white;")
+
+        # Playlist'i yeniden göster (sıralama değişti)
+        self.refresh_music_playlist_display()
+
+    def toggle_loop_mode(self):
+        """Loop modunu aç/kapat"""
+        is_loop = self.music_player.toggle_loop()
+
+        if is_loop:
+            self.loop_btn.setText("🔁 Loop: AÇIK")
+            self.loop_btn.setStyleSheet("background-color: #4CAF50; color: white;")
+        else:
+            self.loop_btn.setText("🔁 Loop: KAPALI")
+            self.loop_btn.setStyleSheet("background-color: #607D8B; color: white;")
+
+    def refresh_music_playlist_display(self):
+        """Playlist listesini yeniden göster"""
+        self.music_playlist_list.clear()
+        for i, (title, _) in enumerate(self.music_player.playlist):
+            self.music_playlist_list.addItem(f"{i+1}. {title}")
 
     def closeEvent(self, event):
         """Pencere kapatılırken temizlik yap"""
