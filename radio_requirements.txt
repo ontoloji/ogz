@@ -7,5 +7,8 @@ PyQt5>=5.15.0
 # VLC Python Bindings (Medya oynatıcı)
 python-vlc>=3.0.0
 
+# YouTube indirme ve stream çıkarma (Online müzik için)
+yt-dlp>=2023.0.0
+
 # Not: VLC Media Player'ın sisteme kurulu olması gerekir
 # İndirme: https://www.videolan.org/vlc/

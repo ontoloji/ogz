@@ -20,6 +20,9 @@ import vlc
 import urllib.request
 import urllib.parse
 from ambient_sounds import AMBIENT_SOUNDS, SOUNDS_DIR
+import subprocess
+import re
+import threading
 
 
 def create_app_icon():
@@ -215,6 +218,168 @@ class NoisePlayer:
         return [sid for sid, info in self.players.items() if info['active']]
 
 
+class MusicPlayer:
+    """YouTube tabanlı online müzik çalar"""
+
+    def __init__(self, vlc_instance, vlc_player):
+        """Mevcut VLC instance'ı kullan"""
+        self.vlc_instance = vlc_instance
+        self.player = vlc_player
+        self.current_song = None
+        self.playlist = []  # [(title, url), ...]
+        self.current_index = -1
+        self.is_playing = False
+
+    def search_youtube(self, query, max_results=10):
+        """YouTube'da şarkı ara (yt-dlp kullanarak)"""
+        try:
+            cmd = [
+                'yt-dlp',
+                '--no-playlist',
+                '--flat-playlist',
+                '--dump-json',
+                f'ytsearch{max_results}:{query}'
+            ]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=15
+            )
+
+            if result.returncode != 0:
+                print(f"yt-dlp error: {result.stderr}")
+                return []
+
+            # Her satır bir JSON objesi
+            results = []
+            for line in result.stdout.strip().split('\n'):
+                if not line:
+                    continue
+                try:
+                    import json
+                    data = json.loads(line)
+                    results.append({
+                        'title': data.get('title', 'Unknown'),
+                        'url': f"https://www.youtube.com/watch?v={data.get('id', '')}",
+                        'duration': data.get('duration', 0),
+                        'uploader': data.get('uploader', 'Unknown')
+                    })
+                except:
+                    continue
+
+            return results
+
+        except subprocess.TimeoutExpired:
+            print("YouTube arama zaman aşımına uğradı")
+            return []
+        except FileNotFoundError:
+            print("yt-dlp bulunamadı! 'pip install yt-dlp' çalıştırın")
+            return []
+        except Exception as e:
+            print(f"Arama hatası: {e}")
+            return []
+
+    def get_stream_url(self, youtube_url):
+        """YouTube URL'den audio stream URL'i al"""
+        try:
+            cmd = [
+                'yt-dlp',
+                '--format', 'bestaudio',
+                '--get-url',
+                youtube_url
+            ]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                print(f"Stream URL alınamadı: {result.stderr}")
+                return None
+
+        except Exception as e:
+            print(f"Stream URL hatası: {e}")
+            return None
+
+    def play_song(self, youtube_url, title="Unknown"):
+        """YouTube şarkısını çal"""
+        self.current_song = {'title': title, 'url': youtube_url}
+
+        # Stream URL'i al (background thread'de)
+        def get_and_play():
+            stream_url = self.get_stream_url(youtube_url)
+            if stream_url:
+                # VLC ile çal
+                media = self.vlc_instance.media_new(stream_url)
+                self.player.set_media(media)
+                self.player.play()
+                self.is_playing = True
+            else:
+                print("Şarkı çalınamadı")
+                self.is_playing = False
+
+        thread = threading.Thread(target=get_and_play, daemon=True)
+        thread.start()
+
+    def stop(self):
+        """Müziği durdur"""
+        self.player.stop()
+        self.is_playing = False
+
+    def add_to_playlist(self, title, url):
+        """Playlist'e şarkı ekle"""
+        self.playlist.append((title, url))
+
+    def remove_from_playlist(self, index):
+        """Playlist'ten şarkı çıkar"""
+        if 0 <= index < len(self.playlist):
+            del self.playlist[index]
+
+    def play_playlist_song(self, index):
+        """Playlist'ten şarkı çal"""
+        if 0 <= index < len(self.playlist):
+            title, url = self.playlist[index]
+            self.current_index = index
+            self.play_song(url, title)
+
+    def next_song(self):
+        """Playlist'te sonraki şarkı"""
+        if self.current_index < len(self.playlist) - 1:
+            self.play_playlist_song(self.current_index + 1)
+
+    def previous_song(self):
+        """Playlist'te önceki şarkı"""
+        if self.current_index > 0:
+            self.play_playlist_song(self.current_index - 1)
+
+    def save_playlist(self, filename):
+        """Playlist'i dosyaya kaydet"""
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(self.playlist, f, ensure_ascii=False, indent=2)
+            return True
+        except Exception as e:
+            print(f"Playlist kaydetme hatası: {e}")
+            return False
+
+    def load_playlist(self, filename):
+        """Playlist'i dosyadan yükle"""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                self.playlist = json.load(f)
+            return True
+        except Exception as e:
+            print(f"Playlist yükleme hatası: {e}")
+            return False
+
+
 class MiniPlayer(QDialog):
     """Mini player penceresi - küçük, her zaman üstte"""
 
@@ -357,7 +522,11 @@ class InternetRadioPlayer(QMainWindow):
 
         # Noise player
         self.noise_player = NoisePlayer()
-        self.current_mode = "radio"  # "radio" veya "noise"
+
+        # Music player (YouTube)
+        self.music_player = MusicPlayer(self.vlc_instance, self.player)
+
+        self.current_mode = "radio"  # "radio", "noise", veya "music"
 
         # Equalizer
         self.equalizer = None
@@ -419,27 +588,54 @@ class InternetRadioPlayer(QMainWindow):
         title.setFont(QFont("Arial", 18, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
 
-        # Mode switch button
-        self.mode_switch_btn = QPushButton("🎵 Noise")
-        self.mode_switch_btn.setFixedSize(120, 40)
-        self.mode_switch_btn.clicked.connect(self.toggle_mode)
-        self.mode_switch_btn.setStyleSheet("""
+        # Mode switch buttons
+        mode_buttons_layout = QHBoxLayout()
+
+        self.radio_mode_btn = QPushButton("📻 Radio")
+        self.radio_mode_btn.setFixedSize(100, 40)
+        self.radio_mode_btn.clicked.connect(lambda: self.switch_to_mode("radio"))
+
+        self.noise_mode_btn = QPushButton("🎵 Noise")
+        self.noise_mode_btn.setFixedSize(100, 40)
+        self.noise_mode_btn.clicked.connect(lambda: self.switch_to_mode("noise"))
+
+        self.music_mode_btn = QPushButton("🎧 Music")
+        self.music_mode_btn.setFixedSize(100, 40)
+        self.music_mode_btn.clicked.connect(lambda: self.switch_to_mode("music"))
+
+        # Başlangıçta Radio aktif
+        self.radio_mode_btn.setStyleSheet("""
             QPushButton {
-                background-color: #9C27B0;
+                background-color: #4CAF50;
                 color: white;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: bold;
                 border-radius: 5px;
             }
-            QPushButton:hover {
-                background-color: #7B1FA2;
-            }
         """)
+
+        for btn in [self.noise_mode_btn, self.music_mode_btn]:
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #9C27B0;
+                    color: white;
+                    font-size: 12px;
+                    font-weight: bold;
+                    border-radius: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #7B1FA2;
+                }
+            """)
+
+        mode_buttons_layout.addWidget(self.radio_mode_btn)
+        mode_buttons_layout.addWidget(self.noise_mode_btn)
+        mode_buttons_layout.addWidget(self.music_mode_btn)
 
         header_layout.addStretch()
         header_layout.addWidget(title)
         header_layout.addStretch()
-        header_layout.addWidget(self.mode_switch_btn)
+        header_layout.addLayout(mode_buttons_layout)
 
         main_layout.addLayout(header_layout)
 
@@ -457,6 +653,11 @@ class InternetRadioPlayer(QMainWindow):
         self.noise_widget = QWidget()
         self.init_noise_ui()
         self.stacked_widget.addWidget(self.noise_widget)
+
+        # Music mode widget
+        self.music_widget = QWidget()
+        self.init_music_ui()
+        self.stacked_widget.addWidget(self.music_widget)
 
         # Start with radio mode
         self.stacked_widget.setCurrentIndex(0)
@@ -839,6 +1040,156 @@ class InternetRadioPlayer(QMainWindow):
         control_panel.setLayout(control_layout)
         noise_layout.addWidget(control_panel)
 
+    def init_music_ui(self):
+        """Music mode arayüzü - YouTube müzik çalar"""
+        music_layout = QVBoxLayout()
+        self.music_widget.setLayout(music_layout)
+
+        # Bilgi etiketi
+        info_label = QLabel("🎧 Online Müzik Çalar - YouTube'dan şarkı ara ve dinle")
+        info_label.setFont(QFont("Arial", 11, QFont.Bold))
+        info_label.setAlignment(Qt.AlignCenter)
+        info_label.setStyleSheet("color: #9C27B0; padding: 10px; background-color: #f0f0f0; border-radius: 5px;")
+        music_layout.addWidget(info_label)
+
+        # Splitter for left (search+results) and right (playlist)
+        splitter = QSplitter(Qt.Horizontal)
+
+        # Left panel - Search and Results
+        left_panel = QWidget()
+        left_layout = QVBoxLayout()
+        left_panel.setLayout(left_layout)
+
+        # Arama grubu
+        search_group = QGroupBox("🔍 Şarkı Ara")
+        search_layout = QVBoxLayout()
+
+        search_input_layout = QHBoxLayout()
+        self.music_search_input = QLineEdit()
+        self.music_search_input.setPlaceholderText("Şarkı adı veya sanatçı girin...")
+        self.music_search_input.setFont(QFont("Arial", 11))
+        self.music_search_input.returnPressed.connect(self.search_music)
+
+        search_btn = QPushButton("🔍 Ara")
+        search_btn.clicked.connect(self.search_music)
+        search_btn.setStyleSheet("background-color: #2196F3; color: white; font-size: 12px; padding: 8px;")
+
+        search_input_layout.addWidget(self.music_search_input)
+        search_input_layout.addWidget(search_btn)
+        search_layout.addLayout(search_input_layout)
+
+        # Arama sonuçları
+        self.search_results_list = QListWidget()
+        self.search_results_list.itemDoubleClicked.connect(self.play_search_result)
+        search_layout.addWidget(QLabel("Arama Sonuçları:"))
+        search_layout.addWidget(self.search_results_list)
+
+        # Sonuç butonları
+        result_buttons = QHBoxLayout()
+        play_result_btn = QPushButton("▶ Çal")
+        play_result_btn.clicked.connect(lambda: self.play_search_result(self.search_results_list.currentItem()))
+        add_to_playlist_btn = QPushButton("➕ Playlist'e Ekle")
+        add_to_playlist_btn.clicked.connect(self.add_search_to_playlist)
+
+        result_buttons.addWidget(play_result_btn)
+        result_buttons.addWidget(add_to_playlist_btn)
+        search_layout.addLayout(result_buttons)
+
+        search_group.setLayout(search_layout)
+        left_layout.addWidget(search_group)
+
+        splitter.addWidget(left_panel)
+
+        # Right panel - Playlist
+        right_panel = QWidget()
+        right_layout = QVBoxLayout()
+        right_panel.setLayout(right_layout)
+
+        playlist_group = QGroupBox("📋 Playlist")
+        playlist_layout = QVBoxLayout()
+
+        self.music_playlist_list = QListWidget()
+        self.music_playlist_list.itemDoubleClicked.connect(self.play_playlist_item)
+        playlist_layout.addWidget(self.music_playlist_list)
+
+        # Playlist butonları
+        playlist_buttons = QHBoxLayout()
+
+        play_pl_btn = QPushButton("▶")
+        play_pl_btn.clicked.connect(lambda: self.play_playlist_item(self.music_playlist_list.currentItem()))
+        play_pl_btn.setFixedWidth(40)
+
+        remove_pl_btn = QPushButton("🗑")
+        remove_pl_btn.clicked.connect(self.remove_from_music_playlist)
+        remove_pl_btn.setFixedWidth(40)
+
+        save_pl_btn = QPushButton("💾 Kaydet")
+        save_pl_btn.clicked.connect(self.save_music_playlist)
+
+        load_pl_btn = QPushButton("📂 Yükle")
+        load_pl_btn.clicked.connect(self.load_music_playlist)
+
+        clear_pl_btn = QPushButton("🗑 Temizle")
+        clear_pl_btn.clicked.connect(self.clear_music_playlist)
+
+        playlist_buttons.addWidget(play_pl_btn)
+        playlist_buttons.addWidget(remove_pl_btn)
+        playlist_buttons.addWidget(save_pl_btn)
+        playlist_buttons.addWidget(load_pl_btn)
+        playlist_buttons.addWidget(clear_pl_btn)
+        playlist_layout.addLayout(playlist_buttons)
+
+        playlist_group.setLayout(playlist_layout)
+        right_layout.addWidget(playlist_group)
+
+        splitter.addWidget(right_panel)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+
+        music_layout.addWidget(splitter)
+
+        # Çalma kontrolleri (alt)
+        controls_group = QGroupBox("🎵 Şimdi Çalıyor")
+        controls_layout = QVBoxLayout()
+
+        # Şu an çalan şarkı
+        self.current_music_label = QLabel("♪ Hiçbir şey çalmıyor")
+        self.current_music_label.setFont(QFont("Arial", 11, QFont.Bold))
+        self.current_music_label.setAlignment(Qt.AlignCenter)
+        self.current_music_label.setStyleSheet("color: #9C27B0; padding: 10px; background-color: #f0f0f0; border-radius: 5px;")
+        controls_layout.addWidget(self.current_music_label)
+
+        # Kontrol butonları
+        control_buttons = QHBoxLayout()
+
+        prev_btn = QPushButton("⏮")
+        prev_btn.setFixedSize(50, 40)
+        prev_btn.clicked.connect(self.music_previous)
+
+        self.music_play_btn = QPushButton("▶")
+        self.music_play_btn.setFixedSize(50, 40)
+        self.music_play_btn.setEnabled(False)
+
+        self.music_stop_btn = QPushButton("⏹")
+        self.music_stop_btn.setFixedSize(50, 40)
+        self.music_stop_btn.clicked.connect(self.music_stop)
+        self.music_stop_btn.setEnabled(False)
+
+        next_btn = QPushButton("⏭")
+        next_btn.setFixedSize(50, 40)
+        next_btn.clicked.connect(self.music_next)
+
+        control_buttons.addStretch()
+        control_buttons.addWidget(prev_btn)
+        control_buttons.addWidget(self.music_play_btn)
+        control_buttons.addWidget(self.music_stop_btn)
+        control_buttons.addWidget(next_btn)
+        control_buttons.addStretch()
+        controls_layout.addLayout(control_buttons)
+
+        controls_group.setLayout(controls_layout)
+        music_layout.addWidget(controls_group)
+
     def play_radio(self):
         """Radyo çalmayı başlat"""
         url = self.url_input.text().strip()
@@ -1177,31 +1528,62 @@ class InternetRadioPlayer(QMainWindow):
         self.change_volume(value)
         self.mini_player.update_volume_label(value)
 
-    def toggle_mode(self):
-        """Radio ve Noise modu arasında geçiş yap"""
-        if self.current_mode == "radio":
-            # Noise moduna geç
-            self.current_mode = "noise"
-            self.mode_switch_btn.setText("📻 Radio")
-            self.stacked_widget.setCurrentIndex(1)  # Noise widget
+    def switch_to_mode(self, mode):
+        """Belirli bir moda geç (radio, noise, music)"""
+        if mode == self.current_mode:
+            return  # Zaten bu moddayız
 
-            # Radio'yu durdur
-            if self.is_playing:
-                self.stop_radio()
-
-            self.statusBar().showMessage("Noise Modu Aktif")
-
-        else:
-            # Radio moduna geç
-            self.current_mode = "radio"
-            self.mode_switch_btn.setText("🎵 Noise")
-            self.stacked_widget.setCurrentIndex(0)  # Radio widget
-
-            # Tüm noise'ları durdur
+        # Mevcut modu durdur
+        if self.current_mode == "radio" and self.is_playing:
+            self.stop_radio()
+        elif self.current_mode == "noise":
             self.noise_player.stop_all()
             self.update_noise_buttons_state()
+        elif self.current_mode == "music":
+            self.music_player.stop()
 
+        # Yeni moda geç
+        self.current_mode = mode
+
+        # Buton stillerini güncelle
+        active_style = """
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 5px;
+            }
+        """
+        inactive_style = """
+            QPushButton {
+                background-color: #9C27B0;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #7B1FA2;
+            }
+        """
+
+        self.radio_mode_btn.setStyleSheet(inactive_style)
+        self.noise_mode_btn.setStyleSheet(inactive_style)
+        self.music_mode_btn.setStyleSheet(inactive_style)
+
+        if mode == "radio":
+            self.stacked_widget.setCurrentIndex(0)
+            self.radio_mode_btn.setStyleSheet(active_style)
             self.statusBar().showMessage("Radio Modu Aktif")
+        elif mode == "noise":
+            self.stacked_widget.setCurrentIndex(1)
+            self.noise_mode_btn.setStyleSheet(active_style)
+            self.statusBar().showMessage("Noise Modu Aktif")
+        elif mode == "music":
+            self.stacked_widget.setCurrentIndex(2)
+            self.music_mode_btn.setStyleSheet(active_style)
+            self.statusBar().showMessage("Music Modu Aktif - yt-dlp gerekli!")
 
     def toggle_noise_sound(self, sound_id):
         """Ambient sesi aç/kapat"""
@@ -1325,6 +1707,174 @@ class InternetRadioPlayer(QMainWindow):
             self.active_sounds_label.setText(f"Aktif sesler ({len(active_sounds)}): {display_text}")
             self.active_sounds_label.setStyleSheet("color: #4CAF50; padding: 5px; font-weight: bold;")
 
+    def search_music(self):
+        """YouTube'da müzik ara"""
+        query = self.music_search_input.text().strip()
+        if not query:
+            QMessageBox.warning(self, "Uyarı", "Lütfen bir şarkı adı girin!")
+            return
+
+        self.statusBar().showMessage(f"Aranıyor: {query}...")
+        self.search_results_list.clear()
+
+        # Background thread'de ara
+        def do_search():
+            results = self.music_player.search_youtube(query, max_results=15)
+            # UI güncellemesi için signal kullan veya QTimer ile kontrol et
+            for result in results:
+                title = result['title']
+                duration = result['duration']
+                mins = duration // 60
+                secs = duration % 60
+                item_text = f"🎵 {title} ({mins}:{secs:02d})"
+
+                item = QListWidgetItem(item_text)
+                item.setData(Qt.UserRole, result['url'])  # URL'i sakla
+                self.search_results_list.addItem(item)
+
+            self.statusBar().showMessage(f"{len(results)} sonuç bulundu")
+
+        thread = threading.Thread(target=do_search, daemon=True)
+        thread.start()
+
+    def play_search_result(self, item):
+        """Arama sonucundan şarkı çal"""
+        if not item:
+            return
+
+        url = item.data(Qt.UserRole)
+        title = item.text().replace("🎵 ", "")
+
+        self.statusBar().showMessage(f"Yükleniyor: {title}...")
+        self.music_player.play_song(url, title)
+
+        # Equalizer'ı uygula
+        QTimer.singleShot(2000, self.apply_equalizer)
+
+        self.current_music_label.setText(f"♪ {title}")
+        self.music_stop_btn.setEnabled(True)
+
+    def add_search_to_playlist(self):
+        """Arama sonucunu playlist'e ekle"""
+        item = self.search_results_list.currentItem()
+        if not item:
+            QMessageBox.warning(self, "Uyarı", "Lütfen bir şarkı seçin!")
+            return
+
+        url = item.data(Qt.UserRole)
+        title = item.text().replace("🎵 ", "")
+
+        self.music_player.add_to_playlist(title, url)
+        self.update_music_playlist_ui()
+        self.statusBar().showMessage(f"Playlist'e eklendi: {title}")
+
+    def play_playlist_item(self, item):
+        """Playlist'ten şarkı çal"""
+        if not item:
+            return
+
+        index = self.music_playlist_list.row(item)
+        self.music_player.play_playlist_song(index)
+
+        title, _ = self.music_player.playlist[index]
+        self.current_music_label.setText(f"♪ {title}")
+        self.music_stop_btn.setEnabled(True)
+
+        # Equalizer'ı uygula
+        QTimer.singleShot(2000, self.apply_equalizer)
+
+    def remove_from_music_playlist(self):
+        """Playlist'ten şarkı çıkar"""
+        item = self.music_playlist_list.currentItem()
+        if not item:
+            return
+
+        index = self.music_playlist_list.row(item)
+        self.music_player.remove_from_playlist(index)
+        self.update_music_playlist_ui()
+
+    def save_music_playlist(self):
+        """Playlist'i dosyaya kaydet"""
+        from PyQt5.QtWidgets import QFileDialog
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Playlist Kaydet",
+            "my_playlist.json",
+            "JSON Files (*.json)"
+        )
+
+        if filename:
+            if self.music_player.save_playlist(filename):
+                QMessageBox.information(self, "Başarılı", "Playlist kaydedildi!")
+            else:
+                QMessageBox.critical(self, "Hata", "Playlist kaydedilemedi!")
+
+    def load_music_playlist(self):
+        """Playlist'i dosyadan yükle"""
+        from PyQt5.QtWidgets import QFileDialog
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Playlist Yükle",
+            "",
+            "JSON Files (*.json)"
+        )
+
+        if filename:
+            if self.music_player.load_playlist(filename):
+                self.update_music_playlist_ui()
+                QMessageBox.information(self, "Başarılı", "Playlist yüklendi!")
+            else:
+                QMessageBox.critical(self, "Hata", "Playlist yüklenemedi!")
+
+    def clear_music_playlist(self):
+        """Playlist'i temizle"""
+        reply = QMessageBox.question(
+            self,
+            "Playlist Temizle",
+            "Tüm playlist silinsin mi?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            self.music_player.playlist = []
+            self.update_music_playlist_ui()
+
+    def update_music_playlist_ui(self):
+        """Playlist UI'ını güncelle"""
+        self.music_playlist_list.clear()
+        for i, (title, url) in enumerate(self.music_player.playlist):
+            item_text = f"{i+1}. {title}"
+            item = QListWidgetItem(item_text)
+            self.music_playlist_list.addItem(item)
+
+    def music_stop(self):
+        """Müziği durdur"""
+        self.music_player.stop()
+        self.current_music_label.setText("♪ Hiçbir şey çalmıyor")
+        self.music_stop_btn.setEnabled(False)
+
+    def music_next(self):
+        """Sonraki şarkı"""
+        self.music_player.next_song()
+        if self.music_player.current_index >= 0:
+            title, _ = self.music_player.playlist[self.music_player.current_index]
+            self.current_music_label.setText(f"♪ {title}")
+            self.music_stop_btn.setEnabled(True)
+
+            # Equalizer'ı uygula
+            QTimer.singleShot(2000, self.apply_equalizer)
+
+    def music_previous(self):
+        """Önceki şarkı"""
+        self.music_player.previous_song()
+        if self.music_player.current_index >= 0:
+            title, _ = self.music_player.playlist[self.music_player.current_index]
+            self.current_music_label.setText(f"♪ {title}")
+            self.music_stop_btn.setEnabled(True)
+
+            # Equalizer'ı uygula
+            QTimer.singleShot(2000, self.apply_equalizer)
+
     def closeEvent(self, event):
         """Pencere kapatılırken temizlik yap"""
         if self.is_playing:
@@ -1332,6 +1882,9 @@ class InternetRadioPlayer(QMainWindow):
 
         # Noise player'ı durdur
         self.noise_player.stop_all()
+
+        # Music player'ı durdur
+        self.music_player.stop()
 
         # Mini player'ı kapat
         if self.mini_player:
