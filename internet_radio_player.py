@@ -233,6 +233,7 @@ class MusicPlayer:
     def search_youtube(self, query, max_results=10):
         """YouTube'da şarkı ara (yt-dlp kullanarak)"""
         try:
+            # Windows için tam yol kullan
             cmd = [
                 'yt-dlp',
                 '--proxy', '',  # Proxy kullanma
@@ -242,23 +243,34 @@ class MusicPlayer:
                 f'ytsearch{max_results}:{query}'
             ]
 
+            print(f"[DEBUG] Running command: {' '.join(cmd)}")
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=20  # 20 saniye timeout
+                timeout=30,  # 30 saniye timeout (Windows'ta daha yavaş olabilir)
+                shell=False  # Windows için shell=False
             )
+
+            print(f"[DEBUG] Return code: {result.returncode}")
+            print(f"[DEBUG] Stdout length: {len(result.stdout)}")
+            print(f"[DEBUG] Stderr: {result.stderr[:500] if result.stderr else 'None'}")
 
             if result.returncode != 0:
                 error_msg = result.stderr
-                print(f"yt-dlp error: {error_msg}")
-                print(f"yt-dlp stdout: {result.stdout}")
+                print(f"[ERROR] yt-dlp failed!")
+                print(f"[ERROR] Full stderr: {error_msg}")
+                print(f"[ERROR] Full stdout: {result.stdout}")
                 return []
 
             # Her satır bir JSON objesi
             results = []
-            for line in result.stdout.strip().split('\n'):
-                if not line:
+            lines = result.stdout.strip().split('\n')
+            print(f"[DEBUG] Got {len(lines)} lines of output")
+
+            for line in lines:
+                if not line.strip():
                     continue
                 try:
                     import json
@@ -269,19 +281,24 @@ class MusicPlayer:
                         'duration': data.get('duration', 0),
                         'uploader': data.get('uploader', 'Unknown')
                     })
-                except:
+                    print(f"[DEBUG] Parsed: {data.get('title', 'Unknown')}")
+                except Exception as e:
+                    print(f"[DEBUG] Failed to parse line: {e}")
                     continue
 
+            print(f"[DEBUG] Total results: {len(results)}")
             return results
 
         except subprocess.TimeoutExpired:
-            print("YouTube arama zaman aşımına uğradı")
+            print("[ERROR] YouTube arama zaman aşımına uğradı (30 saniye)")
             return []
         except FileNotFoundError:
-            print("yt-dlp bulunamadı! 'pip install yt-dlp' çalıştırın")
+            print("[ERROR] yt-dlp bulunamadı! PATH'e ekli mi kontrol et")
             return []
         except Exception as e:
-            print(f"Arama hatası: {e}")
+            print(f"[ERROR] Arama hatası: {e}")
+            import traceback
+            traceback.print_exc()
             return []
 
     def get_stream_url(self, youtube_url):
