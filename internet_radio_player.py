@@ -1774,7 +1774,7 @@ class InternetRadioPlayer(QMainWindow):
             # Sonuçları göster
             for result in results:
                 title = result['title']
-                duration = result['duration']
+                duration = int(result.get('duration', 0))  # Float'tan int'e çevir
                 mins = duration // 60
                 secs = duration % 60
                 item_text = f"🎵 {title} ({mins}:{secs:02d})"
