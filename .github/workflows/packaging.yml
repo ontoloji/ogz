@@ -40,67 +40,10 @@ jobs:
           pip --version
           pip freeze
 
-      - name: Discover PyQt6 plugin path (for PyInstaller --add-data)
-        id: discover_plugins
-        shell: bash
-        run: |
-          # Run a short python snippet to find the PyQt6 plugins directory
-          PLUGINS=$(python - <<'PY'
-import os, pkgutil
-try:
-    import PyQt6
-    base = os.path.dirname(PyQt6.__file__)
-    candidates = [
-        os.path.join(base, 'Qt6', 'plugins'),
-        os.path.join(base, 'Qt', 'plugins'),
-    ]
-    for c in candidates:
-        if os.path.isdir(c):
-            print(c)
-            raise SystemExit(0)
-    # fallback: try loaders
-    for m in ['PyQt6', 'PyQt6.QtCore']:
-        info = pkgutil.get_loader(m)
-        if info:
-            base = os.path.dirname(info.get_filename())
-            c = os.path.join(base, 'Qt6', 'plugins')
-            if os.path.isdir(c):
-                print(c)
-                raise SystemExit(0)
-except Exception:
-    pass
-# print nothing if not found
-PY
-)
-          echo "PYQT6_PLUGINS=$PLUGINS" >> $GITHUB_ENV
-          echo "Discovered plugins: $PLUGINS"
-
-      - name: Prepare PyInstaller add-data args
-        id: prepare_args
-        shell: bash
-        run: |
-          PLUGINS="${PYQT6_PLUGINS:-}"
-          if [ -z "$PLUGINS" ]; then
-            echo "No plugin path discovered, building without explicit --add-data."
-            echo "ADDDATA=" >> $GITHUB_OUTPUT
-          else
-            # For PyInstaller on Windows the separator is ';' in add-data "SRC;DEST"
-            # Map plugins into PyQt6/Qt6/plugins in the bundle
-            ADDDATA="$PLUGINS;PyQt6/Qt6/plugins"
-            # Export as job output
-            echo "ADDDATA=$ADDDATA" >> $GITHUB_OUTPUT
-            echo "Prepared ADDDATA=$ADDDATA"
-          fi
-
       - name: Build portable (one-dir) with PyInstaller
         shell: powershell
         run: |
-          $add = '${{ steps.prepare_args.outputs.ADDDATA }}'
-          if ($add -and $add -ne "") {
-            pyinstaller --noconfirm --onedir --name "SORT-copilot-Portable" --add-data $add main_gui.py
-          } else {
-            pyinstaller --noconfirm --onedir --name "SORT-copilot-Portable" main_gui.py
-          }
+          pyinstaller --noconfirm --onedir --name "SORT-copilot-Portable" main_gui.py
 
       - name: Zip portable build
         shell: powershell
@@ -118,12 +61,7 @@ PY
       - name: Build single-file EXE with PyInstaller
         shell: powershell
         run: |
-          $add = '${{ steps.prepare_args.outputs.ADDDATA }}'
-          if ($add -and $add -ne "") {
-            pyinstaller --noconfirm --onefile --name "SORT-copilot" --add-data $add main_gui.py
-          } else {
-            pyinstaller --noconfirm --onefile --name "SORT-copilot" main_gui.py
-          }
+          pyinstaller --noconfirm --onefile --name "SORT-copilot" main_gui.py
 
       - name: Upload portable artifact
         uses: actions/upload-artifact@v4
