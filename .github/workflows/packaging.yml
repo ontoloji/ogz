@@ -1,0 +1,138 @@
+name: Build Windows portable and exe
+
+on:
+  push:
+    branches:
+      - internetradyocopilot
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        shell: powershell
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) {
+            pip install -r requirements.txt
+          } else {
+            Write-Host 'requirements.txt not found, installing common build deps'
+            pip install pyqt6 pyqt6-plugins pyqtgraph numpy
+          }
+          pip install pyinstaller
+
+      - name: Show environment info
+        shell: powershell
+        run: |
+          python -V
+          pip --version
+          pip freeze
+
+      - name: Discover PyQt6 plugin path (for PyInstaller --add-data)
+        id: discover_plugins
+        shell: bash
+        run: |
+          # Run a short python snippet to find the PyQt6 plugins directory
+          PLUGINS=$(python - <<'PY'
+import os, pkgutil
+try:
+    import PyQt6
+    base = os.path.dirname(PyQt6.__file__)
+    candidates = [
+        os.path.join(base, 'Qt6', 'plugins'),
+        os.path.join(base, 'Qt', 'plugins'),
+    ]
+    for c in candidates:
+        if os.path.isdir(c):
+            print(c)
+            raise SystemExit(0)
+    # fallback: try loaders
+    for m in ['PyQt6', 'PyQt6.QtCore']:
+        info = pkgutil.get_loader(m)
+        if info:
+            base = os.path.dirname(info.get_filename())
+            c = os.path.join(base, 'Qt6', 'plugins')
+            if os.path.isdir(c):
+                print(c)
+                raise SystemExit(0)
+except Exception:
+    pass
+# print nothing if not found
+PY
+)
+          echo "PYQT6_PLUGINS=$PLUGINS" >> $GITHUB_ENV
+          echo "Discovered plugins: $PLUGINS"
+
+      - name: Prepare PyInstaller add-data args
+        id: prepare_args
+        shell: bash
+        run: |
+          PLUGINS="${PYQT6_PLUGINS:-}"
+          if [ -z "$PLUGINS" ]; then
+            echo "No plugin path discovered, building without explicit --add-data."
+            echo "ADDDATA=" >> $GITHUB_OUTPUT
+          else
+            # For PyInstaller on Windows the separator is ';' in add-data "SRC;DEST"
+            # Map plugins into PyQt6/Qt6/plugins in the bundle
+            ADDDATA="$PLUGINS;PyQt6/Qt6/plugins"
+            # Export as job output
+            echo "ADDDATA=$ADDDATA" >> $GITHUB_OUTPUT
+            echo "Prepared ADDDATA=$ADDDATA"
+          fi
+
+      - name: Build portable (one-dir) with PyInstaller
+        shell: powershell
+        run: |
+          $add = '${{ steps.prepare_args.outputs.ADDDATA }}'
+          if ($add -and $add -ne "") {
+            pyinstaller --noconfirm --onedir --name "SORT-copilot-Portable" --add-data $add main_gui.py
+          } else {
+            pyinstaller --noconfirm --onedir --name "SORT-copilot-Portable" main_gui.py
+          }
+
+      - name: Zip portable build
+        shell: powershell
+        run: |
+          $dir = "dist/SORT-copilot-Portable"
+          if (Test-Path $dir) {
+            $zip = "dist/SORT-copilot-Portable.zip"
+            if (Test-Path $zip) { Remove-Item $zip -Force }
+            Compress-Archive -Path (Join-Path $dir '*') -DestinationPath $zip -Force
+          } else {
+            Write-Host "Portable dist not found: $dir"
+            exit 1
+          }
+
+      - name: Build single-file EXE with PyInstaller
+        shell: powershell
+        run: |
+          $add = '${{ steps.prepare_args.outputs.ADDDATA }}'
+          if ($add -and $add -ne "") {
+            pyinstaller --noconfirm --onefile --name "SORT-copilot" --add-data $add main_gui.py
+          } else {
+            pyinstaller --noconfirm --onefile --name "SORT-copilot" main_gui.py
+          }
+
+      - name: Upload portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SORT-copilot-Portable
+          path: dist/SORT-copilot-Portable.zip
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SORT-copilot-exe
+          path: dist/SORT-copilot.exe
