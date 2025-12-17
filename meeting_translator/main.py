@@ -15,7 +15,9 @@ import sys
 import time
 import threading
 import signal
+
 import numpy as np
+
 from audio_capture import AudioCapture
 from speech_to_text import SpeechToText
 from translator import Translator
@@ -38,6 +40,9 @@ class MeetingTranslator:
         self.last_audio_time = None
         self.translation_timer = None
         self.timer_lock = threading.Lock()
+        
+        # Önbelleğe alınan değerler (performans için)
+        self.max_buffer_chunks = None
 
     def initialize(self):
         """Tüm bileşenleri başlat"""
@@ -111,6 +116,9 @@ class MeetingTranslator:
     def process_audio_loop(self):
         """Ses işleme döngüsü (segment-based detection ile)"""
         print("\nSes işleme başlatıldı (segment detection aktif)...")
+        
+        # Performans için max_buffer_chunks'ı önceden hesapla
+        self.max_buffer_chunks = int(self.config.MAX_BUFFER_DURATION / self.config.CHUNK_DURATION)
 
         while self.is_running:
             try:
@@ -130,9 +138,8 @@ class MeetingTranslator:
                 self.last_audio_time = time.time()
                 
                 # Buffer'ın çok büyümesini önle
-                max_buffer_chunks = int(self.config.MAX_BUFFER_DURATION / self.config.CHUNK_DURATION)
-                if len(self.audio_buffer) > max_buffer_chunks:
-                    self.audio_buffer = self.audio_buffer[-max_buffer_chunks:]
+                if len(self.audio_buffer) > self.max_buffer_chunks:
+                    self.audio_buffer = self.audio_buffer[-self.max_buffer_chunks:]
                 
                 # Buffer'daki tüm ses verisini birleştir
                 combined_audio = np.concatenate(self.audio_buffer)

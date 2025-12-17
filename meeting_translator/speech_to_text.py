@@ -117,9 +117,8 @@ class SpeechToText:
             return False
         
         text = text.strip()
-        # Cümle sonu noktalama işaretleri (İngilizce ve bazı Asya dilleri)
-        # '。', '？', '！' karakterleri Japonca/Çince cümle sonları için
-        sentence_endings = ['.', '?', '!', '。', '？', '！']
+        # Config'den cümle sonu noktalama işaretlerini al
+        sentence_endings = self.config.SENTENCE_ENDINGS
         
         return any(text.endswith(ending) for ending in sentence_endings)
 

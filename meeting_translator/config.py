@@ -35,6 +35,10 @@ class Config:
     TRANSLATION_TIMEOUT = 2.5  # Sessizlik sonrası çeviri için bekleme süresi (saniye)
     SILENCE_RMS_THRESHOLD = 0.01  # Sessizlik RMS eşiği
     MIN_TRANSLATION_LENGTH = 3  # Minimum çeviri metin uzunluğu (karakter)
+    
+    # Cümle sonu noktalama işaretleri
+    # İngilizce ve Asya dilleri (Japonca/Çince) için
+    SENTENCE_ENDINGS = ['.', '?', '!', '。', '？', '！']
 
     # API Anahtarları (gerekirse)
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
