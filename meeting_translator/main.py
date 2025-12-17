@@ -76,7 +76,7 @@ class MeetingTranslator:
         with self.timer_lock:
             self.translation_timer = None
             
-            if self.text_buffer and len(self.text_buffer.strip()) >= 3:
+            if self.text_buffer and len(self.text_buffer.strip()) >= self.config.MIN_TRANSLATION_LENGTH:
                 print(f"\n[EN]: {self.text_buffer}")
                 
                 # Türkçeye çevir
@@ -100,8 +100,11 @@ class MeetingTranslator:
             if self.translation_timer is not None:
                 self.translation_timer.cancel()
             
-            # 2.5 saniye sonra çeviri tetikle
-            self.translation_timer = threading.Timer(2.5, self.trigger_translation)
+            # Belirlenen süre sonra çeviri tetikle
+            self.translation_timer = threading.Timer(
+                self.config.TRANSLATION_TIMEOUT, 
+                self.trigger_translation
+            )
             self.translation_timer.daemon = True
             self.translation_timer.start()
 
@@ -119,15 +122,15 @@ class MeetingTranslator:
 
                 # Ses seviyesini kontrol et (sessizlik filtresi)
                 rms = np.sqrt(np.mean(audio_chunk**2))
-                if rms < 0.01:  # Çok düşük ses seviyesi
+                if rms < self.config.SILENCE_RMS_THRESHOLD:
                     continue
 
                 # Buffer'a ekle
                 self.audio_buffer.append(audio_chunk)
                 self.last_audio_time = time.time()
                 
-                # Buffer'ın çok büyümesini önle (maksimum 30 saniye)
-                max_buffer_chunks = int(30 / self.config.CHUNK_DURATION)
+                # Buffer'ın çok büyümesini önle
+                max_buffer_chunks = int(self.config.MAX_BUFFER_DURATION / self.config.CHUNK_DURATION)
                 if len(self.audio_buffer) > max_buffer_chunks:
                     self.audio_buffer = self.audio_buffer[-max_buffer_chunks:]
                 
@@ -154,7 +157,7 @@ class MeetingTranslator:
                             print(f"\n[Segment Tamamlandı - EN]: {current_text}")
                             
                             # Minimum uzunluk kontrolü
-                            if len(current_text) >= 3:
+                            if len(current_text) >= self.config.MIN_TRANSLATION_LENGTH:
                                 turkish_text = self.translator.translate(current_text)
                                 if turkish_text:
                                     print(f"[TR]: {turkish_text}")

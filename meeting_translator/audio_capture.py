@@ -15,7 +15,7 @@ class AudioCapture:
         self.is_recording = False
         self.stream = None
         self.buffer = []
-        self.max_buffer_duration = 30  # Maksimum 30 saniye buffer
+        self.max_buffer_duration = self.config.MAX_BUFFER_DURATION
 
     def list_audio_devices(self):
         """Kullanılabilir ses cihazlarını listele"""

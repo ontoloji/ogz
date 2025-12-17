@@ -29,6 +29,12 @@ class Config:
     # Diğer ayarlar
     MIN_AUDIO_LENGTH = 0.5  # Minimum ses uzunluğu (saniye)
     SILENCE_THRESHOLD = 500  # Sessizlik eşiği
+    
+    # Segment-based translation ayarları
+    MAX_BUFFER_DURATION = 30  # Maksimum buffer süresi (saniye)
+    TRANSLATION_TIMEOUT = 2.5  # Sessizlik sonrası çeviri için bekleme süresi (saniye)
+    SILENCE_RMS_THRESHOLD = 0.01  # Sessizlik RMS eşiği
+    MIN_TRANSLATION_LENGTH = 3  # Minimum çeviri metin uzunluğu (karakter)
 
     # API Anahtarları (gerekirse)
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

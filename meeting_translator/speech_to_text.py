@@ -46,7 +46,7 @@ class SpeechToText:
         try:
             # Ses verisinin sessizlik olup olmadığını kontrol et
             rms = np.sqrt(np.mean(audio_data**2))
-            if rms < 0.01:  # Çok düşük ses seviyesi
+            if rms < self.config.SILENCE_RMS_THRESHOLD:  # Çok düşük ses seviyesi
                 return "" if not return_segments else {"text": "", "segments": []}
 
             # Whisper beklediği formata çevir
@@ -117,7 +117,8 @@ class SpeechToText:
             return False
         
         text = text.strip()
-        # Cümle sonu noktalama işaretleri
+        # Cümle sonu noktalama işaretleri (İngilizce ve bazı Asya dilleri)
+        # '。', '？', '！' karakterleri Japonca/Çince cümle sonları için
         sentence_endings = ['.', '?', '!', '。', '？', '！']
         
         return any(text.endswith(ending) for ending in sentence_endings)
