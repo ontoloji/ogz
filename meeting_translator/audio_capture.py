@@ -15,6 +15,7 @@ class AudioCapture:
         self.is_recording = False
         self.stream = None
         self.buffer = []
+        self.max_buffer_duration = 30  # Maksimum 30 saniye buffer
 
     def list_audio_devices(self):
         """Kullanılabilir ses cihazlarını listele"""
@@ -62,6 +63,12 @@ class AudioCapture:
             audio_data = indata[:, 0]
 
         self.buffer.extend(audio_data.tolist())
+
+        # Buffer'ın çok büyümesini önle (maksimum 30 saniye)
+        max_buffer_samples = int(self.config.SAMPLE_RATE * self.max_buffer_duration)
+        if len(self.buffer) > max_buffer_samples:
+            # Eski veriyi at
+            self.buffer = self.buffer[-max_buffer_samples:]
 
         # Belirlenen süre kadar veri toplandığında kuyruğa ekle
         expected_samples = int(self.config.SAMPLE_RATE * self.config.CHUNK_DURATION)

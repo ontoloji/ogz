@@ -17,17 +17,22 @@ class Translator:
         self.translation_queue = queue.Queue()
         self.cache = {}  # Çeviri önbelleği
 
-    def translate(self, text):
+    def translate(self, text, min_length=3):
         """
         Metni çevir
 
         Args:
             text: Çevrilecek metin (İngilizce)
+            min_length: Minimum metin uzunluğu (karakterde)
 
         Returns:
             str: Çevrilmiş metin (Türkçe)
         """
         if not text or text.strip() == "":
+            return ""
+        
+        # Çok kısa metinleri çevirme (gereksiz API çağrısı)
+        if len(text.strip()) < min_length:
             return ""
 
         # Önbellekte varsa kullan

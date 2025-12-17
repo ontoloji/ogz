@@ -29,15 +29,16 @@ class SpeechToText:
             print(f"Model yükleme hatası: {e}")
             raise
 
-    def transcribe_audio(self, audio_data):
+    def transcribe_audio(self, audio_data, return_segments=False):
         """
         Ses verisini metne çevir
 
         Args:
             audio_data: numpy array (float32, -1.0 to 1.0)
+            return_segments: True ise segment bilgilerini de döndür
 
         Returns:
-            str: Metne çevrilmiş ses
+            str veya dict: Metne çevrilmiş ses (veya segment bilgileri)
         """
         if not self.is_loaded:
             raise RuntimeError("Model yüklenmedi. Önce load_model() çağırın.")
@@ -46,7 +47,7 @@ class SpeechToText:
             # Ses verisinin sessizlik olup olmadığını kontrol et
             rms = np.sqrt(np.mean(audio_data**2))
             if rms < 0.01:  # Çok düşük ses seviyesi
-                return ""
+                return "" if not return_segments else {"text": "", "segments": []}
 
             # Whisper beklediği formata çevir
             # Whisper float32 array bekler, [-1.0, 1.0] aralığında
@@ -66,12 +67,15 @@ class SpeechToText:
                 verbose=False
             )
 
-            text = result["text"].strip()
-            return text
+            if return_segments:
+                return result
+            else:
+                text = result["text"].strip()
+                return text
 
         except Exception as e:
             print(f"Transkripsiyon hatası: {e}")
-            return ""
+            return "" if not return_segments else {"text": "", "segments": []}
 
     def transcribe_async(self, audio_data, callback=None):
         """
@@ -97,6 +101,26 @@ class SpeechToText:
             return self.text_queue.get(timeout=timeout)
         except queue.Empty:
             return None
+    
+    def is_segment_complete(self, text):
+        """
+        Segment'in tamamlanıp tamamlanmadığını kontrol et
+        Noktalama işaretlerine bakarak karar verir
+        
+        Args:
+            text: Kontrol edilecek metin
+            
+        Returns:
+            bool: Segment tamamsa True
+        """
+        if not text:
+            return False
+        
+        text = text.strip()
+        # Cümle sonu noktalama işaretleri
+        sentence_endings = ['.', '?', '!', '。', '？', '！']
+        
+        return any(text.endswith(ending) for ending in sentence_endings)
 
 
 if __name__ == "__main__":
