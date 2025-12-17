@@ -17,6 +17,10 @@ class SubtitleOverlay:
 
     def create_window(self):
         """Overlay penceresini oluştur"""
+        # Zaten bir pencere varsa yeni pencere oluşturma
+        if self.root is not None:
+            return
+        
         self.root = tk.Tk()
 
         # Pencere ayarları
@@ -182,7 +186,8 @@ class SubtitleOverlay:
 
     def run(self):
         """Pencereyi başlat (blocking)"""
-        self.create_window()
+        if self.root is None:
+            self.create_window()
         self.root.mainloop()
 
     def run_async(self):
