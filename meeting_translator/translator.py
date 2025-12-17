@@ -28,7 +28,12 @@ class Translator:
         Returns:
             str: Çevrilmiş metin (Türkçe)
         """
-        if not text or text.strip() == "":
+        if not text:
+            return ""
+        
+        # Strip işlemini bir kere yap
+        text_stripped = text.strip()
+        if not text_stripped:
             return ""
         
         # Minimum uzunluk kontrolü
@@ -36,10 +41,10 @@ class Translator:
             min_length = self.config.MIN_TRANSLATION_LENGTH
         
         # Çok kısa metinleri çevirme (gereksiz API çağrısı)
-        if len(text.strip()) < min_length:
+        if len(text_stripped) < min_length:
             return ""
 
-        # Önbellekte varsa kullan
+        # Önbellekte varsa kullan (orijinal metni kullan)
         if text in self.cache:
             return self.cache[text]
 

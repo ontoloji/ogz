@@ -43,6 +43,13 @@ class MeetingTranslator:
         
         # Önbelleğe alınan değerler (performans için)
         self.max_buffer_chunks = None
+    
+    def _cancel_timer(self):
+        """Timer'ı iptal et (yardımcı metod)"""
+        with self.timer_lock:
+            if self.translation_timer is not None:
+                self.translation_timer.cancel()
+                self.translation_timer = None
 
     def initialize(self):
         """Tüm bileşenleri başlat"""
@@ -78,22 +85,21 @@ class MeetingTranslator:
         """
         Timer tarafından çağrılır: buffer'daki metni çevir ve göster
         """
-        with self.timer_lock:
-            self.translation_timer = None
+        self._cancel_timer()
+        
+        if self.text_buffer and len(self.text_buffer.strip()) >= self.config.MIN_TRANSLATION_LENGTH:
+            print(f"\n[EN]: {self.text_buffer}")
             
-            if self.text_buffer and len(self.text_buffer.strip()) >= self.config.MIN_TRANSLATION_LENGTH:
-                print(f"\n[EN]: {self.text_buffer}")
+            # Türkçeye çevir
+            turkish_text = self.translator.translate(self.text_buffer)
+            if turkish_text:  # Boş değilse göster
+                print(f"[TR]: {turkish_text}")
                 
-                # Türkçeye çevir
-                turkish_text = self.translator.translate(self.text_buffer)
-                if turkish_text:  # Boş değilse göster
-                    print(f"[TR]: {turkish_text}")
-                    
-                    # Altyazıyı güncelle
-                    self.overlay.update_text(self.text_buffer, turkish_text)
-                
-                # Buffer'ı temizle
-                self.text_buffer = ""
+                # Altyazıyı güncelle
+                self.overlay.update_text(self.text_buffer, turkish_text)
+            
+            # Buffer'ı temizle
+            self.text_buffer = ""
     
     def reset_translation_timer(self):
         """
@@ -118,7 +124,9 @@ class MeetingTranslator:
         print("\nSes işleme başlatıldı (segment detection aktif)...")
         
         # Performans için max_buffer_chunks'ı önceden hesapla
-        self.max_buffer_chunks = int(self.config.MAX_BUFFER_DURATION / self.config.CHUNK_DURATION)
+        # ceil kullanarak buffer'ın en az belirtilen süre kadar olmasını garanti et
+        import math
+        self.max_buffer_chunks = math.ceil(self.config.MAX_BUFFER_DURATION / self.config.CHUNK_DURATION)
 
         while self.is_running:
             try:
@@ -175,10 +183,7 @@ class MeetingTranslator:
                             self.text_buffer = ""
                             
                             # Timer varsa iptal et
-                            with self.timer_lock:
-                                if self.translation_timer is not None:
-                                    self.translation_timer.cancel()
-                                    self.translation_timer = None
+                            self._cancel_timer()
                         else:
                             # Segment henüz tamamlanmadı, buffer'da tut
                             self.text_buffer = current_text
@@ -242,10 +247,7 @@ class MeetingTranslator:
         self.is_running = False
 
         # Timer'ı iptal et
-        with self.timer_lock:
-            if self.translation_timer is not None:
-                self.translation_timer.cancel()
-                self.translation_timer = None
+        self._cancel_timer()
 
         # Ses yakalamayı durdur
         if self.audio_capture:
